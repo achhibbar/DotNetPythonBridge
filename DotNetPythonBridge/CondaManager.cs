@@ -270,7 +270,7 @@ namespace DotNetPythonBridge
             }
 
             Log.Logger.LogError("Unable to locate conda or mamba.");
-            throw new Exception("Unable to locate conda or mamba. Please call CondaManager.Initialize(path) with the full path.");
+            throw new FileNotFoundException("Unable to locate conda or mamba. Please call CondaManager.Initialize(path) with the full path.");
         }
 
         public static async Task<string> GetCondaOrMambaPathWSL(WSL_Helper.WSL_Distro? wSL_Distro = null)
@@ -299,7 +299,7 @@ namespace DotNetPythonBridge
                 if (rslt.ExitCode != 0)
                 {
                     Log.Logger.LogError($"Failed to warm up WSL Distro {wSL_Distro.Name}: {rslt.Error}");
-                    throw new Exception($"Failed to warm up WSL Distro {wSL_Distro.Name}: {rslt.Error}");
+                    throw new InvalidOperationException($"Failed to warm up WSL Distro {wSL_Distro.Name}: {rslt.Error}");
                 }
 
                 // WSL mode
@@ -358,7 +358,7 @@ namespace DotNetPythonBridge
                 }
 
                 Log.Logger.LogError("Unable to locate conda or mamba in WSL.");
-                throw new Exception("Unable to locate conda or mamba in WSL. Please ensure it is installed.");
+                throw new FileNotFoundException("Unable to locate conda or mamba in WSL. Please call CondaManager.Initialize with the WSL conda path.");
             }
             else // wSL_Distro == null
             {
@@ -376,7 +376,7 @@ namespace DotNetPythonBridge
                     if (string.IsNullOrEmpty(_WSL_distroName))
                     {
                         Log.Logger.LogError("WSL Distro not specified and no default WSL Distro initialized.");
-                        throw new Exception("WSL Distro not specified and no default WSL Distro initialized.");
+                        throw new InvalidOperationException("WSL Distro not specified and no default WSL Distro initialized.");
                     }
 
                     return await GetCondaOrMambaPathWSL(new WSL_Helper.WSL_Distro(_WSL_distroName, false));
@@ -384,7 +384,7 @@ namespace DotNetPythonBridge
                 else // if no initialized distro and default wsl distro cannot be found, throw error
                 {
                     Log.Logger.LogError("WSL Distro not specified and no default WSL Distro initialized.");
-                    throw new Exception("WSL Distro not specified and no default WSL Distro initialized.");
+                    throw new InvalidOperationException("WSL Distro not specified and no default WSL Distro initialized.");
                 }
             }
         }

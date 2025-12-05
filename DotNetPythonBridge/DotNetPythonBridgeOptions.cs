@@ -47,6 +47,7 @@ namespace DotNetPythonBridge
         // Timeouts
         public int HealthCheckTimeoutSeconds { get; set; } = 5;
         public int ForceKillTimeoutMilliseconds { get; set; } = 500;
+        public int StopTimeoutMilliseconds { get; set; } = 2000;
 
         // Fluent helpers
         public PythonServiceOptions WithPort(int port) { DefaultPort = port; return this; }
@@ -54,5 +55,6 @@ namespace DotNetPythonBridge
         public PythonServiceOptions EnableHealthCheck(bool enabled = true) { HealthCheckEnabled = enabled; return this; }
         public PythonServiceOptions WithHealthCheckTimeout(int seconds) { HealthCheckTimeoutSeconds = seconds; return this; }
         public PythonServiceOptions WithForceKillTimeout(int milliseconds) { ForceKillTimeoutMilliseconds = milliseconds; return this; }
+        public PythonServiceOptions WithStopTimeout(int milliseconds) { StopTimeoutMilliseconds = milliseconds; return this; }
     }
 }

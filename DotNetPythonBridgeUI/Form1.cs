@@ -493,7 +493,8 @@ namespace DotNetPythonBridgeUI
 
                 //stop the windows service
                 bool stopped = await winPyService.Stop();
-                rtbPythonBridge.Text += "Python Service in Windows stopped." + Environment.NewLine;
+                // report stopping based on bool result
+                rtbPythonBridge.Text += stopped ? "Python Service in Windows stopped successfully." + Environment.NewLine : "Failed to stop Python Service in Windows." + Environment.NewLine;
                 rtbPythonBridge.Text += Environment.NewLine;
             }
             else // run in wsl

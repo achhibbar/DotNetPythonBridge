@@ -34,23 +34,36 @@ namespace DotNetPythonBridge.Utils
 
             try
             {
-                var result = await ProcessHelper.RunProcess("wsl", "-l");
+                var result = await ProcessHelper.RunProcess("wsl", "-l -v");
                 if (result.ExitCode == 0 && !string.IsNullOrWhiteSpace(result.Output))
                 {
                     //store the distris in WSL_Distro object
                     WSL_Distros distros = new WSL_Distros();
                     var lines = result.Output.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
-                    foreach (var line in lines)
+
+                    //skip the first header line
+                    foreach (var line in lines.Skip(1))
                     {
-                        //skip the first line
-                        if (line.StartsWith("Windows Subsystem for Linux"))
-                            continue;
-                        bool isDefault = line.EndsWith("(Default)");
-                        string name = isDefault ? line.Replace(" (Default)", "").Trim() : line.Trim();
-                        distros.Distros.Add(new WSL_Distro(name, isDefault));
-                        // warm up the distro
-                        await WarmupWSL_Distro(name);
-                        Log.Logger.LogInformation($"Found WSL Distro: {name}, Default: {isDefault}");
+                        // Example line for default distro: "*    Ubuntu-20.04    Running    2"
+                        var parts = line.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                        if (parts.Length >= 4)
+                        {
+                            bool isDefault = parts[0] == "*";
+                            string name = parts[1];
+                            distros.Distros.Add(new WSL_Distro(name, isDefault));
+                            // warm up the distro
+                            await WarmupWSL_Distro(name);
+                            Log.Logger.LogInformation($"Found WSL Distro: {name}, Default: {isDefault}");
+                        }
+                        else if (parts.Length == 3) // handle case for non-default distro without the "*"
+                        {
+                            bool isDefault = false;
+                            string name = parts[0];
+                            distros.Distros.Add(new WSL_Distro(name, isDefault));
+                            // warm up the distro
+                            await WarmupWSL_Distro(name);
+                            Log.Logger.LogInformation($"Found WSL Distro: {name}, Default: {isDefault}");
+                        } 
                     }
 
                     // Cache the retrieved distros and return

@@ -40,8 +40,10 @@ namespace DotNetPythonBridge
                 throw new FileNotFoundException($"Script not found: {scriptPath}");
             }
 
-            // Reserve port if requested
-            int port = options.DefaultPort == 0 ? PortHelper.GetFreePort() : options.DefaultPort; // if 0, get free port
+            // Reserve port, if 0 then get free port, otherwise use specified port
+            var portReservation = PortHelper.ReservePort(options.DefaultPort);
+            int port = portReservation.Port;
+            //int port = options.DefaultPort == 0 ? PortHelper.GetFreePort() : options.DefaultPort; // if 0, get free port
 
             // Resolve python executable inside the env
             string pythonExe = await PythonRunner.GetPythonExecutable(env);
@@ -49,9 +51,12 @@ namespace DotNetPythonBridge
             // Arguments: script + port + user args
             string args = $"\"{scriptPath}\" --port {port} {options.DefaultServiceArgs}".Trim();
 
-            var proc = await ProcessHelper.StartProcess(pythonExe, args);
+            // give up the port reservation
+            portReservation.Release();
 
-            var service = new PythonService(proc, port);
+            var proc = await ProcessHelper.StartProcess(pythonExe, args); // start the process
+
+            var service = new PythonService(proc, port); // create service instance
 
             Log.Logger.LogInformation($"Started Python service (PID: {service.Pid}) on port {service.Port} using script: {scriptPath}");
 
@@ -88,14 +93,19 @@ namespace DotNetPythonBridge
                 throw new FileNotFoundException($"Script not found: {scriptPath}");
             }
 
-            // Reserve port if requested
-            int port = options.DefaultPort == 0 ? PortHelper.GetFreePort() : options.DefaultPort;
+            // Reserve port
+            var portReservation = PortHelper.ReservePort(options.DefaultPort);
+            int port = portReservation.Port;
+            //int port = options.DefaultPort == 0 ? PortHelper.GetFreePort() : options.DefaultPort;
 
             // Resolve python executable inside the env
             string pythonExe = await PythonRunner.GetPythonExecutableWSL(env, wsl);
 
             // Prepend with wsl -d <distro> to run inside WSL and use bash -lic to ensure env is loaded correctly
             string args = $"bash -lic \"{pythonExe} \\\"{FilenameHelper.convertWindowsPathToWSL(scriptPath)}\\\" --port {port} {options.DefaultServiceArgs}\"".Trim();
+
+            // give up the port reservation
+            portReservation.Release();
 
             var proc = await ProcessHelper.StartProcess("wsl", $"-d {wsl.Name} {args}");
 
@@ -179,13 +189,35 @@ namespace DotNetPythonBridge
                     Log.Logger.LogWarning($"Failed to send shutdown request to Python service (PID: {Pid}) on port {Port}");
                 }
 
-                // Optionally, wait a bit for graceful shutdown
-                await Task.Delay(options.ForceKillTimeoutMilliseconds);
+                // poll for exit using options.ForceKillTimeoutMilliseconds as total timeout
+                var sw = Stopwatch.StartNew();
+                while (sw.Elapsed.TotalMilliseconds < options.ForceKillTimeoutMilliseconds)
+                {
+                    if (_process == null || _process.HasExited ) // check if process has exited
+                    {
+                        if (PortHelper.checkIfPortIsFree(Port)) // check if port is free
+                        {
+                            Log.Logger.LogInformation($"Python service (PID: {Pid}) has exited gracefully.");
+                            return true;
+                        }
+                    }
+                    await Task.Delay(100);
+                }
+
 
                 if (_process != null && !_process.HasExited) // force kill if still running
                 {
                     _process.Kill(entireProcessTree: true);
-                    _process.WaitForExit();
+                    
+                    var waitTask = _process.WaitForExitAsync();
+                    if (await Task.WhenAny(waitTask, Task.Delay(options.StopTimeoutMilliseconds)) == waitTask) // wait for exit with timeout
+                    {
+                        Log.Logger.LogInformation($"Force killed Python service (PID: {Pid})");
+                    }
+                    else // timeout
+                    {
+                        Log.Logger.LogWarning($"Process (PID: {Pid}) did not exit within {options.StopTimeoutMilliseconds} ms after kill.");
+                    }
                     Log.Logger.LogInformation($"Force killed Python service (PID: {Pid})");
                 }
 
