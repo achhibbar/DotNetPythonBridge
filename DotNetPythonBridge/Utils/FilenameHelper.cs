@@ -70,7 +70,28 @@ namespace DotNetPythonBridge.Utils
             Log.Logger.LogInformation($"Converted WSL conda path '{WSL_condaPath}' in distro '{WSL_DistroName}' to Windows path '{windowsPath}'");
             return windowsPath;
         }
-        
+
+        internal static string BashEscape(string arg)
+            => "'" + arg.Replace("'", "'\"'\"'") + "'"; // escape single quotes for bash by closing, escaping, and reopening
+
+        internal static string BuildBashCommand(
+            string pythonExe,
+            string wslScriptPath,
+            int port,
+            PythonServiceOptions options)
+        {
+            var args = new List<string>
+    {
+        BashEscape(pythonExe),
+        BashEscape(wslScriptPath),
+        "--port", port.ToString()
+    };
+
+            if (!string.IsNullOrWhiteSpace(options.DefaultServiceArgs))
+                args.Add(options.DefaultServiceArgs);
+
+            return string.Join(" ", args);
+        }
 
     }
 }

@@ -161,5 +161,188 @@ namespace DotNetPythonBridge.Utils
                 return Encoding.UTF8;
             }
         }
+
+        internal static Task<PythonResult> RunProcess(
+            string file,
+            IEnumerable<string> arguments,
+            CancellationToken cancellationToken = default)
+        {
+            var psi = new ProcessStartInfo
+            {
+                FileName = file,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            foreach (var arg in arguments)
+                psi.ArgumentList.Add(arg);
+
+            return RunProcessInternal(psi, cancellationToken);
+        }
+
+        private static async Task<PythonResult> RunProcessInternal(
+            ProcessStartInfo psi,
+            CancellationToken cancellationToken)
+        {
+            Log.Logger.LogDebug($"Running process: {psi.FileName} {psi.Arguments}");
+
+            using var proc = Process.Start(psi)
+                ?? throw new Exception("Failed to start process.");
+
+            // Kick off parallel reading of output/error
+            Task<string> outputTask = proc.StandardOutput.ReadToEndAsync();
+            Task<string> errorTask = proc.StandardError.ReadToEndAsync();
+
+            try
+            {
+                // Wait for process to exit (supports cancellation)
+                await proc.WaitForExitAsync(cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                try { proc.Kill(entireProcessTree: true); } catch { }
+
+                throw;
+            }
+
+            // Ensure all output is read
+            await Task.WhenAll(outputTask, errorTask);
+
+            var result = new PythonResult(
+                proc.ExitCode,
+                outputTask.Result,
+                errorTask.Result);
+
+            Log.Logger.LogDebug($"Process exited with code {result.ExitCode}");
+
+            return result;
+        }
+
+        internal static Task<Process> StartProcess(
+            string file,
+            IEnumerable<string> arguments,
+            CancellationToken cancellationToken = default,
+            Action<string>? onOutput = null,
+            Action<string>? onError = null)
+        {
+            var psi = new ProcessStartInfo
+            {
+                FileName = file,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            };
+
+            foreach (var arg in arguments)
+                psi.ArgumentList.Add(arg);
+
+            return StartProcessInternal(psi, cancellationToken, onOutput, onError);
+        }
+
+        private static Task<Process> StartProcessInternal(
+            ProcessStartInfo psi,
+            CancellationToken cancellationToken,
+            Action<string>? onOutput,
+            Action<string>? onError)
+        {
+            var proc = Process.Start(psi)!;
+
+            if (proc.HasExited)
+                throw new Exception("Process exited prematurely.");
+
+            proc.OutputDataReceived += (s, e) =>
+            {
+                if (e.Data != null)
+                {
+                    onOutput?.Invoke(e.Data);
+                    Log.Logger.LogDebug($"[STDOUT] {e.Data}");
+                }
+            };
+
+            proc.ErrorDataReceived += (s, e) =>
+            {
+                if (e.Data != null)
+                {
+                    onError?.Invoke(e.Data);
+                    Log.Logger.LogWarning($"[STDERR] {e.Data}");
+                }
+            };
+
+            proc.BeginOutputReadLine();
+            proc.BeginErrorReadLine();
+
+            if (cancellationToken.CanBeCanceled)
+            {
+                cancellationToken.Register(() =>
+                {
+                    if (!proc.HasExited)
+                    {
+                        Log.Logger.LogInformation("Cancellation requested. Killing process.");
+                        try { proc.Kill(entireProcessTree: true); }
+                        catch { }
+                    }
+                });
+            }
+
+            return Task.FromResult(proc);
+        }
+
+
+        /// <summary>
+        /// Potential wrapper for RunProcess with string args, that will take over in future if needed
+        /// </summary>
+        /// <param name="file"></param>
+        /// <param name="args"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        //internal static Task<PythonResult> RunProcess(
+        //    string file,
+        //    string args,
+        //    CancellationToken cancellationToken = default)
+        //{
+        //    var psi = new ProcessStartInfo
+        //    {
+        //        FileName = file,
+        //        Arguments = args,
+        //        RedirectStandardOutput = true,
+        //        RedirectStandardError = true,
+        //        UseShellExecute = false,
+        //        CreateNoWindow = true,
+        //        StandardOutputEncoding = GetEncodingForProcess(file, args)
+        //    };
+
+        //    return RunProcessInternal(psi, cancellationToken);
+        //}
+
+        /// <summary>
+        /// Potential wrapper for StartProcess with string args, that will take over in future if needed
+        //internal static Task<Process> StartProcess(
+        //    string file,
+        //    string args,
+        //    CancellationToken cancellationToken = default,
+        //    Action<string>? onOutput = null,
+        //    Action<string>? onError = null)
+        //{
+        //    return StartProcessInternal(
+        //        new ProcessStartInfo
+        //        {
+        //            FileName = file,
+        //            Arguments = args,
+        //            RedirectStandardOutput = true,
+        //            RedirectStandardError = true,
+        //            UseShellExecute = false,
+        //            CreateNoWindow = true,
+        //            StandardOutputEncoding = GetEncodingForProcess(file, args)
+        //        },
+        //        cancellationToken,
+        //        onOutput,
+        //        onError
+        //    );
+        //}
+
+
     }
 }

@@ -311,7 +311,7 @@ namespace DotNetPythonBridge
                     {
                         string args = string.IsNullOrEmpty(wSL_Distro.Name)
                             ? $"bash -lic \"which {exe}\""
-                            : $"-d {wSL_Distro.Name} bash -lic \"which {exe}\"";
+                            : $"-d {wSL_Distro.Name} bash -lic \"which {exe}\""; // if distro is specified, use -d to run in that distro, otherwise run in default distro
 
                         var result = await ProcessHelper.RunProcess("wsl", args);
 
