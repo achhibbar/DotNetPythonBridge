@@ -75,23 +75,130 @@ namespace DotNetPythonBridge.Utils
             => "'" + arg.Replace("'", "'\"'\"'") + "'"; // escape single quotes for bash by closing, escaping, and reopening
 
         internal static string BuildBashCommand(
-            string pythonExe,
-            string wslScriptPath,
-            int port,
-            PythonServiceOptions options)
+        string pythonExe,
+        string wslScriptPath,
+        int port,
+        PythonServiceOptions options)
         {
             var args = new List<string>
-    {
-        BashEscape(pythonExe),
-        BashEscape(wslScriptPath),
-        "--port", port.ToString()
-    };
+            {
+                BashEscape(pythonExe),
+                BashEscape(wslScriptPath),
+                "--port", port.ToString()
+            };
 
             if (!string.IsNullOrWhiteSpace(options.DefaultServiceArgs))
                 args.Add(options.DefaultServiceArgs);
 
             return string.Join(" ", args);
         }
+    }
 
+    public class WSLCommandBuilder
+    {
+        private readonly string _distroName;
+        private readonly List<string> _wslArgs = new();
+        private readonly List<string> _bashArgs = new();
+        private bool _useBash = false;
+
+        public WSLCommandBuilder(string distroName)
+        {
+            _distroName = distroName;
+        }
+
+        // ------------------------------------------------------------
+        // WSL Layer (arguments passed directly to: wsl.exe -d <distro> ...)
+        // ------------------------------------------------------------
+
+        /// <summary>
+        /// Adds a raw argument directly to WSL (no escaping).
+        /// </summary>
+        public WSLCommandBuilder AddWSLArg(string arg)
+        {
+            _wslArgs.Add(arg);
+            return this;
+        }
+
+        /// <summary>
+        /// Adds multiple raw WSL args.
+        /// </summary>
+        public WSLCommandBuilder AddWSLArgs(params string[] args)
+        {
+            _wslArgs.AddRange(args);
+            return this;
+        }
+
+        /// <summary>
+        /// Enables Bash execution using: bash -lc "<command>"
+        /// </summary>
+        public WSLCommandBuilder UseBash()
+        {
+            _useBash = true;
+            return this;
+        }
+
+        // ------------------------------------------------------------
+        // Bash Layer (arguments that WSL passes to bash -lc "...")
+        // ------------------------------------------------------------
+
+        /// <summary>
+        /// Adds a bash argument with correct POSIX escaping.
+        /// </summary>
+        public WSLCommandBuilder AddBashArg(string arg)
+        {
+            _bashArgs.Add(BashEscape(arg));
+            return this;
+        }
+
+        /// <summary>
+        /// Adds multiple bash arguments safely.
+        /// </summary>
+        public WSLCommandBuilder AddBashArgs(params string[] args)
+        {
+            foreach (var a in args)
+                _bashArgs.Add(BashEscape(a));
+
+            return this;
+        }
+
+        // ------------------------------------------------------------
+        // Build
+        // ------------------------------------------------------------
+
+        /// <summary>
+        /// Produces the final ProcessHelper-compatible (file, args[]) pair.
+        /// </summary>
+        public (string file, IEnumerable<string> args) Build()
+        {
+            var finalArgs = new List<string>();
+
+            finalArgs.Add("-d");
+            finalArgs.Add(_distroName);
+
+            // Raw WSL args
+            finalArgs.AddRange(_wslArgs);
+
+            if (_useBash)
+            {
+                finalArgs.Add("bash");
+                finalArgs.Add("-lc");
+
+                string bashCommand = string.Join(" ", _bashArgs);
+                finalArgs.Add(bashCommand);
+            }
+
+            return ("wsl", finalArgs);
+        }
+
+        // ------------------------------------------------------------
+        // Bash escaping utility
+        // ------------------------------------------------------------
+
+        private static string BashEscape(string arg)
+        {
+            // Surround with single quotes, escape existing ones correctly.
+            // Example: abc'def → 'abc'"'"'def'
+            return "'" + arg.Replace("'", "'\"'\"'") + "'";
+        }
     }
 }

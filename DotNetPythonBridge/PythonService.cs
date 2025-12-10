@@ -165,6 +165,20 @@ namespace DotNetPythonBridge
             // Build the inner bash command safely
             string bashCommand = FilenameHelper.BuildBashCommand(pythonExe, wslScriptPath, port, options);
 
+            var builder = new WSLCommandBuilder(wsl.Name)
+                .UseBash()
+                .AddBashArgs(
+                    pythonExe,
+                    wslScriptPath,
+                    "--port",
+                    port.ToString()
+                );
+            // Optional additional args
+            if (!string.IsNullOrWhiteSpace(options.DefaultServiceArgs))
+                builder.AddBashArg(options.DefaultServiceArgs);
+            var (file, args) = builder.Build(); // compare this to existing start method to ensure equivalence
+            //var proc = await ProcessHelper.StartProcess(file, args);
+
             // Free port reservation after building bashCommand
             portReservation.Release();
 
