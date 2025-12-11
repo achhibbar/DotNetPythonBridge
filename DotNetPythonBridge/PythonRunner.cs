@@ -57,10 +57,14 @@ namespace DotNetPythonBridge
                 throw new FileNotFoundException($"Python script not found: {scriptPath}");
             }
 
+            // Build the inner bash command safely
+            string bashCommand = FilenameHelper.BuildBashCommand(pythonExe, FilenameHelper.convertWindowsPathToWSL(scriptPath), arguments);
+
             // Run the command using bash -lic to ensure the environment is loaded correctly
             // ensure the script path is converted to WSL path for the command
-            var result = await ProcessHelper.RunProcess(
-                "wsl", $"-d {wSL_Distro.Name} bash -lic \"{pythonExe} \\\"{FilenameHelper.convertWindowsPathToWSL(scriptPath)}\\\" {arguments}\"");
+            var result = await ProcessHelper.RunProcess("wsl", $"-d {wSL_Distro.Name} bash -lic \"{bashCommand}\"");
+            //var result = await ProcessHelper.RunProcess(
+            //    "wsl", $"-d {wSL_Distro.Name} bash -lic \"{pythonExe} \\\"{FilenameHelper.convertWindowsPathToWSL(scriptPath)}\\\" {arguments}\"");
 
             if (result.ExitCode != 0)
             {
@@ -109,11 +113,15 @@ namespace DotNetPythonBridge
 
             string pythonExe = await GetPythonExecutableWSL(env, wSL_Distro);
 
+            // Build the inner bash command safely
+            string bashCommand = FilenameHelper.BuildBashCommand(pythonExe, code);
+
             // Escape quotes to avoid breaking shell
             string escapedCode = code.Replace("\"", "\\\"");
 
             // Prepend with wsl -d <distro> to run inside WSL using bash -lic
-            var result = await ProcessHelper.RunProcess("wsl", $"-d {wSL_Distro.Name} bash -lic \"{pythonExe} -c \\\"{escapedCode}\\\"\"");
+            var result = await ProcessHelper.RunProcess("wsl", $"-d {wSL_Distro.Name} bash -lic \"{bashCommand}\"");
+            //var result = await ProcessHelper.RunProcess("wsl", $"-d {wSL_Distro.Name} bash -lic \"{pythonExe} -c \\\"{escapedCode}\\\"\"");
 
             if (result.ExitCode != 0)
             {

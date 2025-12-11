@@ -71,6 +71,7 @@ namespace DotNetPythonBridge.Utils
             return windowsPath;
         }
 
+        // for launching service via bash -lc '...'
         internal static string BashEscape(string arg)
             => "'" + arg.Replace("'", "'\"'\"'") + "'"; // escape single quotes for bash by closing, escaping, and reopening
 
@@ -89,6 +90,37 @@ namespace DotNetPythonBridge.Utils
 
             if (!string.IsNullOrWhiteSpace(options.DefaultServiceArgs))
                 args.Add(options.DefaultServiceArgs);
+
+            return string.Join(" ", args);
+        }
+
+        // for running arbitrary python scripts with arguments via bash -lc '...'
+        internal static string BuildBashCommand(
+        string pythonExe,
+        string wslScriptPath,
+        string pyScriptArgs)
+        {
+            var args = new List<string>
+            {
+                BashEscape(pythonExe),
+                BashEscape(wslScriptPath),
+                pyScriptArgs
+            };
+
+            return string.Join(" ", args);
+        }
+
+        // for running inline python code via bash -lc '...'
+        internal static string BuildBashCommand(
+            string pythonExe,
+            string inlinePythonCode)
+        {
+               var args = new List<string>
+               {
+                BashEscape(pythonExe),
+                "-c",
+                inlinePythonCode
+            };
 
             return string.Join(" ", args);
         }

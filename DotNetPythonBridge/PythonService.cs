@@ -75,58 +75,6 @@ namespace DotNetPythonBridge
         /// <summary>
         /// Start a long-running Python service inside the given conda environment.
         /// </summary>
-        public static async Task<PythonService> StartWSL_old(string scriptPath, PythonEnvironment? env = null, PythonServiceOptions? options = null, WSL_Helper.WSL_Distro? wsl = null)
-        {
-            Log.Logger.LogInformation($"Starting Python service using environment: {(env != null ? env.Name : "Base")}, script: {scriptPath}, WSL: {(wsl != null ? wsl.Name : "None")}");
-
-            if (wsl == null)
-            {
-                wsl = await WSL_Helper.getDefaultWSL_Distro();
-                Log.Logger.LogInformation($"No WSL distro specified. Using default: {wsl.Name}");
-            }
-
-            options ??= new PythonServiceOptions();
-
-            if (!File.Exists(scriptPath)) //ensure the script path exists on Windows side
-            {
-                Log.Logger.LogError($"Script not found: {scriptPath}");
-                throw new FileNotFoundException($"Script not found: {scriptPath}");
-            }
-
-            // Reserve port
-            var portReservation = PortHelper.ReservePort(options.DefaultPort);
-            int port = portReservation.Port;
-            //int port = options.DefaultPort == 0 ? PortHelper.GetFreePort() : options.DefaultPort;
-
-            // Resolve python executable inside the env
-            string pythonExe = await PythonRunner.GetPythonExecutableWSL(env, wsl);
-
-            // Prepend with wsl -d <distro> to run inside WSL and use bash -lic to ensure env is loaded correctly
-            string args = $"bash -lic \"{pythonExe} \\\"{FilenameHelper.convertWindowsPathToWSL(scriptPath)}\\\" --port {port} {options.DefaultServiceArgs}\"".Trim();
-
-            // give up the port reservation
-            portReservation.Release();
-
-            var proc = await ProcessHelper.StartProcess("wsl", $"-d {wsl.Name} {args}");
-
-            var service = new PythonService(proc, port, wsl);
-
-            Log.Logger.LogInformation($"Started Python service in WSL distro '{wsl.Name}' (PID: {service.Pid}) on port {service.Port} using script: {scriptPath}");
-
-            // Optional health check
-            if (options.HealthCheckEnabled && !await service.WaitForHealthCheck(options))
-            {
-                await service.Stop();
-                throw new Exception("Python service failed to become healthy.");
-            }
-            Log.Logger.LogInformation($"Python service (PID: {service.Pid}) is healthy on port {service.Port}");
-
-            return service;
-        }
-
-        /// <summary>
-        /// Start a long-running Python service inside the given conda environment.
-        /// </summary>
         /// <param name="scriptPath"></param>
         /// <param name="env"></param>
         /// <param name="options"></param>
@@ -165,32 +113,11 @@ namespace DotNetPythonBridge
             // Build the inner bash command safely
             string bashCommand = FilenameHelper.BuildBashCommand(pythonExe, wslScriptPath, port, options);
 
-            var builder = new WSLCommandBuilder(wsl.Name)
-                .UseBash()
-                .AddBashArgs(
-                    pythonExe,
-                    wslScriptPath,
-                    "--port",
-                    port.ToString()
-                );
-            // Optional additional args
-            if (!string.IsNullOrWhiteSpace(options.DefaultServiceArgs))
-                builder.AddBashArg(options.DefaultServiceArgs);
-            var (file, args) = builder.Build(); // compare this to existing start method to ensure equivalence
-            //var proc = await ProcessHelper.StartProcess(file, args);
-
             // Free port reservation after building bashCommand
             portReservation.Release();
 
             // Start process via WSL using ArgumentList
-            var proc = await ProcessHelper.StartProcess(
-                "wsl",
-                new[]
-                {
-            "-d", wsl.Name,
-            "bash", "-lc",
-            bashCommand // already safely escaped
-                });
+            var proc = await ProcessHelper.StartProcess("wsl", new[] {"-d", wsl.Name, "bash", "-lc", bashCommand }); // already safely escaped
 
             var service = new PythonService(proc, port, wsl);
 
