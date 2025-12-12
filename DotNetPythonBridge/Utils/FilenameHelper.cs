@@ -71,9 +71,29 @@ namespace DotNetPythonBridge.Utils
             return windowsPath;
         }
 
+        // Escape quotes to avoid breaking shell
+        internal static string EscapeQuotes(string input)
+            => input.Replace("\"", "\\\"");
+
         // for launching service via bash -lc '...'
         internal static string BashEscape(string arg)
             => "'" + arg.Replace("'", "'\"'\"'") + "'"; // escape single quotes for bash by closing, escaping, and reopening
+
+        /// <summary>
+        /// Escapes inline Python code so it can be safely passed to: 
+        /// bash -lic "/path/to/python -c '...python code...'"
+        /// Uses single quotes on the bash side (recommended and bulletproof).
+        /// </summary>
+        internal static string BashEscapeInlinePythonCode(string inlinePythonCode)
+        {
+            // Bash single-quoted string: 'don''t' → literal don't
+            // So we replace every ' with '\'' (close quote, escaped quote, reopen quote)
+            var bashSingleQuoted = inlinePythonCode
+                .Replace("\\", "\\\\")   // optional: protect backslashes if you want them literal
+                .Replace("'", "'\\''");  // the key: escape single quotes correctly
+
+            return $"'{bashSingleQuoted}'";
+        }
 
         internal static string BuildBashCommand(
         string pythonExe,
@@ -119,7 +139,7 @@ namespace DotNetPythonBridge.Utils
                {
                 BashEscape(pythonExe),
                 "-c",
-                inlinePythonCode
+                BashEscapeInlinePythonCode(inlinePythonCode)
             };
 
             return string.Join(" ", args);

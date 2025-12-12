@@ -86,7 +86,7 @@ namespace DotNetPythonBridge
             string pythonExe = await GetPythonExecutable(env);
 
             // Escape quotes to avoid breaking shell
-            string escapedCode = code.Replace("\"", "\\\"");
+            string escapedCode = FilenameHelper.EscapeQuotes(code);
 
             var result = await ProcessHelper.RunProcess(pythonExe, $"-c \"{escapedCode}\"");
             if (result.ExitCode != 0)
@@ -117,7 +117,7 @@ namespace DotNetPythonBridge
             string bashCommand = FilenameHelper.BuildBashCommand(pythonExe, code);
 
             // Escape quotes to avoid breaking shell
-            string escapedCode = code.Replace("\"", "\\\"");
+            //string escapedCode = code.Replace("\"", "\\\"");
 
             // Prepend with wsl -d <distro> to run inside WSL using bash -lic
             var result = await ProcessHelper.RunProcess("wsl", $"-d {wSL_Distro.Name} bash -lic \"{bashCommand}\"");
@@ -234,12 +234,18 @@ namespace DotNetPythonBridge
 
             // WSL layout: <envPath>/bin/python
             string exe = env.Path + "/bin/python";
+            // exe for bash -lic must be properly escaped
+            string escapedExe = FilenameHelper.BashEscape(exe);
 
             // warm up the WSL distro in case it's not running
             await WSL_Helper.WarmupWSL_Distro(wSL_Distro);
 
             // check if the exe exists inside WSL using bash -lic
-            var checkResult = await ProcessHelper.RunProcess("wsl", $"-d {wSL_Distro.Name} bash -lic \"test -f {exe} && echo exists\"");
+            // Use plain 'bash -c' — no login, no interactive, no profile loading
+            string bashCmd = $"bash -c \"test -f {escapedExe} && echo exists || echo missing\"";
+
+            var checkResult = await ProcessHelper.RunProcess("wsl", $"-d {wSL_Distro.Name} {bashCmd}");
+            //var checkResult = await ProcessHelper.RunProcess("wsl", $"-d {wSL_Distro.Name} bash -lic \"test -f {exe} && echo exists\"");
 
             if (checkResult.Output.Trim() != "exists")
             {
