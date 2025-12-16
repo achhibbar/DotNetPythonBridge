@@ -121,7 +121,8 @@ namespace DotNetPythonBridge.Utils
         {
             for (int i = 0; i < 3; i++)
             {
-                var result = await ProcessHelper.RunProcess("wsl", $"-d {wslDistro.Name} echo WSL Distro Warmed Up");
+                string escapedDistroName = FilenameHelper.BashEscape(wslDistro.Name);
+                var result = await ProcessHelper.RunProcess("wsl", $"-d {escapedDistroName} echo WSL Distro Warmed Up");
 
                 if (result.ExitCode == 0)
                 {
