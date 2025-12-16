@@ -15,7 +15,7 @@ namespace DotNetPythonBridge.Tests
         [InlineData("\"file.yaml\"", "\"file.yaml\"")]
         public void SanitizeYamlFilepath_WrapsWithQuotes_IfNotPresent(string input, string expected)
         {
-            var result = FilenameHelper.sanitizeYamlFilepath(input);
+            var result = FilenameHelper.EnsureYamlFilepathQuoted(input);
             Assert.Equal(expected, result);
         }
 

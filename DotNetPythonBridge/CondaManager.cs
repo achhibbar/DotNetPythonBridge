@@ -103,9 +103,13 @@ namespace DotNetPythonBridge
                             throw new Exception($"Failed to warm up WSL Distro {options.DefaultWSLDistro}: {rslt.Error}");
                         }
 
+                        // escape any special chars in the path for bash
+                        string escapedWSLCondaPath = FilenameHelper.BashEscape(FilenameHelper.convertWindowsPathToWSL(options.DefaultWSLCondaPath));
+                        // use which to verify the conda path exists in WSL
+                        string bashCommand = $"bash -lic \"which {escapedWSLCondaPath}\"";
                         // confirm the conda path exists in the warmed up distro
-                        var whichResult =
-                            await ProcessHelper.RunProcess("wsl", $"-d {options.DefaultWSLDistro} bash -lic \"which {FilenameHelper.convertWindowsPathToWSL(options.DefaultWSLCondaPath)}\"");
+                        var whichResult = await ProcessHelper.RunProcess("wsl", $"-d {options.DefaultWSLDistro} {bashCommand}");
+
                         if (whichResult.ExitCode != 0 || string.IsNullOrWhiteSpace(whichResult.Output))
                         {
                             Log.Logger.LogError($"Conda not found at {options.DefaultWSLCondaPath} in WSL Distro {options.DefaultWSLDistro}.");
@@ -309,9 +313,15 @@ namespace DotNetPythonBridge
                 {
                     try
                     {
+                        string escapedExe = FilenameHelper.BashEscape(exe); // escape any special chars in the exe name for bash
+                        string bashCommand = $"which {escapedExe}";
                         string args = string.IsNullOrEmpty(wSL_Distro.Name)
-                            ? $"bash -lic \"which {exe}\""
-                            : $"-d {wSL_Distro.Name} bash -lic \"which {exe}\""; // if distro is specified, use -d to run in that distro, otherwise run in default distro
+                            ? $"bash -lic {FilenameHelper.BashEscape(bashCommand)}"
+                            : $"-d {wSL_Distro.Name} bash -lic {FilenameHelper.BashEscape(bashCommand)}";
+
+                        //string args = string.IsNullOrEmpty(wSL_Distro.Name)
+                        //    ? $"bash -lic \"which {escapedExe}\"" // if no distro is specified, run in default distro
+                        //    : $"-d {wSL_Distro.Name} bash -lic \"which {escapedExe}\""; // if distro is specified, use -d to run in that distro, otherwise run in default distro
 
                         var result = await ProcessHelper.RunProcess("wsl", args);
 
@@ -460,8 +470,10 @@ namespace DotNetPythonBridge
 
             if (wslDistro != null) // A specific distro is provided
             {
-                // wsl -d Ubuntu bash -lic "conda info --json"
-                var result = await ProcessHelper.RunProcess("wsl", $"-d {wslDistro.Name} bash -lic \"{await GetCondaOrMambaPathWSL(wslDistro)} info --json\"");
+                string escapedCondaPath = FilenameHelper.BashEscape(await GetCondaOrMambaPathWSL(wslDistro)); // escape any special chars in the conda path for bash
+                string bashCommand = $"bash -lic \"{escapedCondaPath} info --json\""; // use bash -lic to properly source the environment in WSL
+
+                var result = await ProcessHelper.RunProcess("wsl", $"-d {wslDistro.Name} {bashCommand}");
 
                 if (result.ExitCode != 0)
                 {
@@ -607,7 +619,7 @@ namespace DotNetPythonBridge
             PythonResult result;
 
             // check if yaml filepath is wrapped in quotes, if not wrap it in quotes so that paths with spaces or special chars work
-            string yamlFileSanitized = FilenameHelper.sanitizeYamlFilepath(yamlFile);
+            string yamlFileSanitized = FilenameHelper.EnsureYamlFilepathQuoted(yamlFile);
 
             if (string.IsNullOrEmpty(envName)) // use env name from YAML
             {
@@ -642,18 +654,21 @@ namespace DotNetPythonBridge
             {
                 // if the yaml file is a windows path, convert it to WSL path
                 yamlFile = FilenameHelper.convertWindowsPathToWSL(yamlFile);
-                // check if yaml filepath is wrapped in single quotes, if not wrap it in single quotes so that paths with spaces or special chars work
-                string yamlFileSanitized = FilenameHelper.sanitizeYamlFilepathWSL(yamlFile);
+                string escapedYamlFile = FilenameHelper.BashEscape(yamlFile); // escape any special chars in the yaml file path for bash
+                string escapedCondaPath = FilenameHelper.BashEscape(await GetCondaOrMambaPathWSL(wslDistro)); // escape any special chars in the conda path for bash
 
                 if (string.IsNullOrEmpty(envName)) // use env name from YAML
                 {
                     // Use bash -lic to properly source the environment in WSL, and wrap yamlFile in single quotes to avoid issues with special chars
-                    result = await ProcessHelper.RunProcess("wsl", $"-d {wslDistro.Name} bash -lic \"{await GetCondaOrMambaPathWSL(wslDistro)} env create -f {yamlFileSanitized}\"");
+                    string bashCommand = $"bash -lic \"{escapedCondaPath} env create -f {escapedYamlFile}\"";
+                    result = await ProcessHelper.RunProcess("wsl", $"-d {wslDistro.Name} {bashCommand}");
                 }
                 else // use specified env name to override name in YAML
                 {
+                    string escapedEnvName = FilenameHelper.BashEscape(envName); // escape any special chars in the env name for bash
+                    string bashCommand = $"bash -lic \"{escapedCondaPath} env create -n {escapedEnvName} -f {escapedYamlFile}\"";
                     // Use bash -lic to properly source the environment in WSL, and wrap yamlFile in single quotes to avoid issues with special chars
-                    result = await ProcessHelper.RunProcess("wsl", $"-d {wslDistro.Name} bash -lic \"{await GetCondaOrMambaPathWSL(wslDistro)} env create -n {envName} -f {yamlFileSanitized}\"");
+                    result = await ProcessHelper.RunProcess("wsl", $"-d {wslDistro.Name} {bashCommand}");
                 }
 
                 if (result.ExitCode != 0)
@@ -709,11 +724,13 @@ namespace DotNetPythonBridge
 
             if (wslDistro != null) // wslDistro is provided
             {
+                string escapedCondaPath = FilenameHelper.BashEscape(await GetCondaOrMambaPathWSL(wslDistro)); // escape any special chars in the conda path for bash
+                string escapedEnvName = FilenameHelper.BashEscape(envName); // escape any special chars in the env name for bash
+                string bashCommand = $"bash -lic \"{escapedCondaPath} env remove -n {escapedEnvName} --yes\"";
+
                 // Use bash -lic to properly source the environment in WSL
-                var result = await ProcessHelper.RunProcess(
-                    "wsl",
-                    $"-d {wslDistro.Name} bash -lic \"{await GetCondaOrMambaPathWSL(wslDistro)} env remove -n {envName} --yes\""
-                );
+                var result = await ProcessHelper.RunProcess("wsl", $"-d {wslDistro.Name} {bashCommand}");
+
                 if (result.ExitCode != 0)
                 {
                     Log.Logger.LogError($"Failed to delete env {envName} in WSL: {result.Error}");

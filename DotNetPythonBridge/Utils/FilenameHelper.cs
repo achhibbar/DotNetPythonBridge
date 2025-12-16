@@ -8,7 +8,7 @@ namespace DotNetPythonBridge.Utils
 {
     internal class FilenameHelper
     {
-        internal static string sanitizeYamlFilepath(string yamlFile)
+        internal static string EnsureYamlFilepathQuoted(string yamlFile)
         {
             // check if yaml filepath is wrapped in quotes, if not wrap it in quotes so that paths with spaces or special chars work
             yamlFile = yamlFile.Trim(); // remove leading/trailing whitespace
@@ -16,7 +16,7 @@ namespace DotNetPythonBridge.Utils
             {
                 yamlFile = $"\"{yamlFile}\"";
             }
-            Log.Logger.LogDebug($"Sanitized YAML filepath: {yamlFile}");
+            Log.Logger.LogDebug($"Ensured YAML filepath is quoted: {yamlFile}");
             return yamlFile;
         }
 
@@ -95,6 +95,14 @@ namespace DotNetPythonBridge.Utils
             return $"'{bashSingleQuoted}'";
         }
 
+        /// <summary>
+        /// for launching service via bash -lc '...'
+        /// </summary>
+        /// <param name="pythonExe"></param>
+        /// <param name="wslScriptPath"></param>
+        /// <param name="port"></param>
+        /// <param name="options"></param>
+        /// <returns></returns>
         internal static string BuildBashCommand(
         string pythonExe,
         string wslScriptPath,
