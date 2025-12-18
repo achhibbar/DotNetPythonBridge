@@ -8,7 +8,7 @@ namespace DotNetPythonBridge.Utils
 {
     internal class FilenameHelper
     {
-        internal static string EnsureYamlFilepathQuoted(string yamlFile)
+        internal static string EnsureFilepathQuoted(string yamlFile)
         {
             // check if yaml filepath is wrapped in quotes, if not wrap it in quotes so that paths with spaces or special chars work
             yamlFile = yamlFile.Trim(); // remove leading/trailing whitespace
@@ -151,6 +151,11 @@ namespace DotNetPythonBridge.Utils
             };
 
             return string.Join(" ", args);
+        }
+
+        internal static string BuildBashWhichCommand(string command)
+        {
+            return $"which {BashEscape(command)}";
         }
     }
 

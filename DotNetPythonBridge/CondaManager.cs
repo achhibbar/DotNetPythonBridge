@@ -103,12 +103,12 @@ namespace DotNetPythonBridge
                             throw new Exception($"Failed to warm up WSL Distro {options.DefaultWSLDistro}: {rslt.Error}");
                         }
 
-                        // escape any special chars in the path for bash
-                        string escapedWSLCondaPath = FilenameHelper.BashEscape(FilenameHelper.convertWindowsPathToWSL(options.DefaultWSLCondaPath));
                         // use which to verify the conda path exists in WSL
-                        string bashCommand = $"bash -lic \"which {escapedWSLCondaPath}\"";
+                        // convert the windows path to WSL path and build the which command
+                        string bashCommand = FilenameHelper.BuildBashWhichCommand(FilenameHelper.convertWindowsPathToWSL(options.DefaultWSLCondaPath));
                         // confirm the conda path exists in the warmed up distro
-                        var whichResult = await ProcessHelper.RunProcess("wsl", $"-d {options.DefaultWSLDistro} {bashCommand}");
+                        //var whichResult = await ProcessHelper.RunProcess("wsl", $"-d {options.DefaultWSLDistro} {bashCommand}");
+                        var whichResult = await ProcessHelper.RunProcess("wsl", new[] { "-d", options.DefaultWSLDistro, "bash", "-lic", bashCommand });
 
                         if (whichResult.ExitCode != 0 || string.IsNullOrWhiteSpace(whichResult.Output))
                         {
@@ -313,11 +313,16 @@ namespace DotNetPythonBridge
                 {
                     try
                     {
-                        string escapedExe = FilenameHelper.BashEscape(exe); // escape any special chars in the exe name for bash
-                        string bashCommand = $"which {escapedExe}";
-                        string args = string.IsNullOrEmpty(wSL_Distro.Name)
-                            ? $"bash -lic {FilenameHelper.BashEscape(bashCommand)}"
-                            : $"-d {wSL_Distro.Name} bash -lic {FilenameHelper.BashEscape(bashCommand)}";
+                        //string escapedExe = FilenameHelper.BashEscape(exe); // escape any special chars in the exe name for bash
+                        string bashCommand = FilenameHelper.BuildBashWhichCommand(exe);
+                        //string bashCommand = $"which {escapedExe}";
+                        //string args = string.IsNullOrEmpty(wSL_Distro.Name)
+                        //    ? $"bash -lic {FilenameHelper.BashEscape(bashCommand)}"
+                        //    : $"-d {wSL_Distro.Name} bash -lic {FilenameHelper.BashEscape(bashCommand)}";
+
+                        string[] args = string.IsNullOrEmpty(wSL_Distro.Name)
+                            ? new[] { "bash", "-lic", bashCommand }
+                            : new[] { "-d", wSL_Distro.Name, "bash", "-lic", bashCommand };
 
                         //string args = string.IsNullOrEmpty(wSL_Distro.Name)
                         //    ? $"bash -lic \"which {escapedExe}\"" // if no distro is specified, run in default distro
@@ -619,7 +624,7 @@ namespace DotNetPythonBridge
             PythonResult result;
 
             // check if yaml filepath is wrapped in quotes, if not wrap it in quotes so that paths with spaces or special chars work
-            string yamlFileSanitized = FilenameHelper.EnsureYamlFilepathQuoted(yamlFile);
+            string yamlFileSanitized = FilenameHelper.EnsureFilepathQuoted(yamlFile);
 
             if (string.IsNullOrEmpty(envName)) // use env name from YAML
             {

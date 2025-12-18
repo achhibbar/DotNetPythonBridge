@@ -18,6 +18,7 @@ namespace DotNetPythonBridge
             Log.Logger.LogInformation($"Running script: {scriptPath} with arguments: {arguments} in environment: {(env != null ? env.Name : "Base")}");
 
             string pythonExe = await GetPythonExecutable(env);
+            string escapedScriptPath = FilenameHelper.EnsureFilepathQuoted(scriptPath);
 
             if (!File.Exists(scriptPath))
             {
@@ -25,7 +26,9 @@ namespace DotNetPythonBridge
                 throw new FileNotFoundException($"Python script not found: {scriptPath}");
             }
 
-            var result = await ProcessHelper.RunProcess(pythonExe, $"\"{scriptPath}\" {arguments}");
+            //var result = await ProcessHelper.RunProcess(pythonExe, new[] { escapedScriptPath, arguments });
+            var result = await ProcessHelper.RunProcess(pythonExe, $"{escapedScriptPath} {arguments}");
+            //var result = await ProcessHelper.RunProcess(pythonExe, $"\"{scriptPath}\" {arguments}");
             if (result.ExitCode != 0)
             {
                 Log.Logger.LogError($"Script execution failed with error: {result.Error}");
@@ -62,7 +65,12 @@ namespace DotNetPythonBridge
 
             // Run the command using bash -lic to ensure the environment is loaded correctly
             // ensure the script path is converted to WSL path for the command
-            var result = await ProcessHelper.RunProcess("wsl", $"-d {wSL_Distro.Name} bash -lic \"{bashCommand}\"");
+            var result = await ProcessHelper.RunProcess("wsl", new[]
+            {
+                "-d", wSL_Distro.Name,
+                "bash", "-lic", bashCommand
+            });
+            //var result = await ProcessHelper.RunProcess("wsl", $"-d {wSL_Distro.Name} bash -lic \"{bashCommand}\"");
             //var result = await ProcessHelper.RunProcess(
             //    "wsl", $"-d {wSL_Distro.Name} bash -lic \"{pythonExe} \\\"{FilenameHelper.convertWindowsPathToWSL(scriptPath)}\\\" {arguments}\"");
 
@@ -88,7 +96,8 @@ namespace DotNetPythonBridge
             // Escape quotes to avoid breaking shell
             string escapedCode = FilenameHelper.EscapeQuotes(code);
 
-            var result = await ProcessHelper.RunProcess(pythonExe, $"-c \"{escapedCode}\"");
+            var result = await ProcessHelper.RunProcess(pythonExe, new[] { "-c", escapedCode });
+            //var result = await ProcessHelper.RunProcess(pythonExe, $"-c \"{escapedCode}\"");
             if (result.ExitCode != 0)
             {
                 Log.Logger.LogError($"Code execution failed with error: {result.Error}");
@@ -120,7 +129,12 @@ namespace DotNetPythonBridge
             //string escapedCode = code.Replace("\"", "\\\"");
 
             // Prepend with wsl -d <distro> to run inside WSL using bash -lic
-            var result = await ProcessHelper.RunProcess("wsl", $"-d {wSL_Distro.Name} bash -lic \"{bashCommand}\"");
+            var result = await ProcessHelper.RunProcess("wsl", new[]
+            {
+                "-d", wSL_Distro.Name,
+                "bash", "-lic", bashCommand
+            });
+            //var result = await ProcessHelper.RunProcess("wsl", $"-d {wSL_Distro.Name} bash -lic \"{bashCommand}\"");
             //var result = await ProcessHelper.RunProcess("wsl", $"-d {wSL_Distro.Name} bash -lic \"{pythonExe} -c \\\"{escapedCode}\\\"\"");
 
             if (result.ExitCode != 0)
@@ -242,9 +256,14 @@ namespace DotNetPythonBridge
 
             // check if the exe exists inside WSL using bash -lic
             // Use plain 'bash -c' — no login, no interactive, no profile loading
-            string bashCmd = $"bash -c \"test -f {escapedExe} && echo exists || echo missing\"";
+            //string bashCmd = $"bash -c \"test -f {escapedExe} && echo exists || echo missing\"";
 
-            var checkResult = await ProcessHelper.RunProcess("wsl", $"-d {wSL_Distro.Name} {bashCmd}");
+            var checkResult = await ProcessHelper.RunProcess("wsl", new[]
+            {
+                "-d", wSL_Distro.Name,
+                "bash", "-c", $"test -f {escapedExe} && echo exists || echo missing"
+            });
+            //var checkResult = await ProcessHelper.RunProcess("wsl", $"-d {wSL_Distro.Name} {bashCmd}");
             //var checkResult = await ProcessHelper.RunProcess("wsl", $"-d {wSL_Distro.Name} bash -lic \"test -f {exe} && echo exists\"");
 
             if (checkResult.Output.Trim() != "exists")
