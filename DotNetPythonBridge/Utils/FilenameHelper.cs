@@ -157,6 +157,55 @@ namespace DotNetPythonBridge.Utils
         {
             return $"which {BashEscape(command)}";
         }
+
+        /// <summary>
+        /// for launching conda commands via bash -lc '...'
+        /// </summary>
+        /// <param name="condaPath"></param>
+        /// <param name="args"></param>
+        /// <returns></returns>
+        public static string BuildBashCondaCommand(string condaPath, string args)
+        {
+            return $"{BashEscape(condaPath)} {args}";
+        }
+
+        /// <summary>
+        /// Builds a bash command string to create a Conda environment, properly escaping arguments.
+        /// </summary>
+        /// <param name="condaPath">The full path to the conda or mamba executable.</param>
+        /// <param name="yamlFile">The path to the YAML file.</param>
+        /// <param name="envName">Optional environment name to override the YAML.</param>
+        /// <returns>A bash command string suitable for use with WSL.</returns>
+        public static string BuildBashCreateCondaEnvCmd(string condaPath, string yamlFile, string? envName = null)
+        {
+            string escapedCondaPath = BashEscape(condaPath);
+            string escapedYamlFile = BashEscape(yamlFile);
+
+            string condaCmd;
+            if (string.IsNullOrEmpty(envName))
+            {
+                condaCmd = $"{escapedCondaPath} env create -f {escapedYamlFile}";
+            }
+            else
+            {
+                string escapedEnvName = BashEscape(envName);
+                condaCmd = $"{escapedCondaPath} env create -n {escapedEnvName} -f {escapedYamlFile}";
+            }
+
+            // Wrap the command in bash -lic "..."
+            return $"bash -lic \"{condaCmd}\"";
+        }
+
+        public static string BuildBashDeleteCondaEnvCmd(string condaPath, string envName)
+        {
+            string escapedCondaPath = BashEscape(condaPath);
+            string escapedEnvName = BashEscape(envName);
+
+            string condaCmd = $"{escapedCondaPath} env remove -n {escapedEnvName} -y";
+
+            // Wrap the command in bash -lic "..."
+            return $"bash -lic \"{condaCmd}\"";
+        }
     }
 
     public class WSLCommandBuilder
