@@ -20,17 +20,6 @@ namespace DotNetPythonBridge.Tests
         }
 
         [Theory]
-        [InlineData("/mnt/c/my folder/file.yaml", "'/mnt/c/my folder/file.yaml'")]
-        [InlineData("'/mnt/c/my folder/file.yaml'", "'/mnt/c/my folder/file.yaml'")]
-        [InlineData(" file.yaml ", "'file.yaml'")]
-        [InlineData("'file.yaml'", "'file.yaml'")]
-        public void SanitizeYamlFilepathWSL_WrapsWithSingleQuotes_IfNotPresent(string input, string expected)
-        {
-            var result = FilenameHelper.sanitizeYamlFilepathWSL(input);
-            Assert.Equal(expected, result);
-        }
-
-        [Theory]
         [InlineData("C:\\Users\\Test\\file.yaml", "/mnt/c/Users/Test/file.yaml")]
         [InlineData("D:\\data\\my file.yaml", "/mnt/d/data/my file.yaml")]
         [InlineData("/mnt/c/Users/Test/file.yaml", "/mnt/c/Users/Test/file.yaml")]

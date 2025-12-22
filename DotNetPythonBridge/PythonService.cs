@@ -49,12 +49,12 @@ namespace DotNetPythonBridge
             string pythonExe = await PythonRunner.GetPythonExecutable(env);
 
             // Arguments: script + port + user args
-            string args = $"\"{scriptPath}\" --port {port} {options.DefaultServiceArgs}".Trim();
+            string[] args = { scriptPath, "--port", port.ToString(), options.DefaultServiceArgs };
 
             // give up the port reservation
             portReservation.Release();
 
-            var proc = await ProcessHelper.StartProcess(pythonExe, args); // start the process
+            var proc = await ProcessHelper.StartProcess(pythonExe, args); // start the process using ArgumentList to avoid issues with spaces
 
             var service = new PythonService(proc, port); // create service instance
 
@@ -111,7 +111,7 @@ namespace DotNetPythonBridge
             string wslScriptPath = FilenameHelper.convertWindowsPathToWSL(scriptPath);
 
             // Build the inner bash command safely
-            string bashCommand = FilenameHelper.BuildBashCommand(pythonExe, wslScriptPath, port, options);
+            string bashCommand = BashCommandBuilder.BuildBashStartServiceCommand(pythonExe, wslScriptPath, port, options);
 
             // Free port reservation after building bashCommand
             portReservation.Release();

@@ -61,7 +61,7 @@ namespace DotNetPythonBridge
             }
 
             // Build the inner bash command safely
-            string bashCommand = FilenameHelper.BuildBashCommand(pythonExe, FilenameHelper.convertWindowsPathToWSL(scriptPath), arguments);
+            string bashCommand = BashCommandBuilder.BuildBashRunScriptCommand(pythonExe, FilenameHelper.convertWindowsPathToWSL(scriptPath), arguments);
 
             // Run the command using bash -lic to ensure the environment is loaded correctly
             // ensure the script path is converted to WSL path for the command
@@ -94,7 +94,7 @@ namespace DotNetPythonBridge
             string pythonExe = await GetPythonExecutable(env);
 
             // Escape quotes to avoid breaking shell
-            string escapedCode = FilenameHelper.EscapeQuotes(code);
+            string escapedCode = BashCommandBuilder.EscapeQuotes(code);
 
             var result = await ProcessHelper.RunProcess(pythonExe, new[] { "-c", escapedCode });
             //var result = await ProcessHelper.RunProcess(pythonExe, $"-c \"{escapedCode}\"");
@@ -123,7 +123,7 @@ namespace DotNetPythonBridge
             string pythonExe = await GetPythonExecutableWSL(env, wSL_Distro);
 
             // Build the inner bash command safely
-            string bashCommand = FilenameHelper.BuildBashCommand(pythonExe, code);
+            string bashCommand = BashCommandBuilder.BuildBashRunInlineCodeCommand(pythonExe, code);
 
             // Escape quotes to avoid breaking shell
             //string escapedCode = code.Replace("\"", "\\\"");
@@ -249,7 +249,7 @@ namespace DotNetPythonBridge
             // WSL layout: <envPath>/bin/python
             string exe = env.Path + "/bin/python";
             // exe for bash -lic must be properly escaped
-            string escapedExe = FilenameHelper.BashEscape(exe);
+            string escapedExe = BashCommandBuilder.BashEscape(exe);
 
             // warm up the WSL distro in case it's not running
             await WSL_Helper.WarmupWSL_Distro(wSL_Distro);

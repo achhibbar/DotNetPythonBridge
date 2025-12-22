@@ -105,7 +105,7 @@ namespace DotNetPythonBridge
 
                         // use which to verify the conda path exists in WSL
                         // convert the windows path to WSL path and build the which command
-                        string bashCommand = FilenameHelper.BuildBashWhichCommand(FilenameHelper.convertWindowsPathToWSL(options.DefaultWSLCondaPath));
+                        string bashCommand = BashCommandBuilder.BuildBashWhichCommand(FilenameHelper.convertWindowsPathToWSL(options.DefaultWSLCondaPath));
                         // confirm the conda path exists in the warmed up distro
                         //var whichResult = await ProcessHelper.RunProcess("wsl", $"-d {options.DefaultWSLDistro} {bashCommand}");
                         var whichResult = await ProcessHelper.RunProcess("wsl", new[] { "-d", options.DefaultWSLDistro, "bash", "-lic", bashCommand });
@@ -314,7 +314,7 @@ namespace DotNetPythonBridge
                     try
                     {
                         //string escapedExe = FilenameHelper.BashEscape(exe); // escape any special chars in the exe name for bash
-                        string bashCommand = FilenameHelper.BuildBashWhichCommand(exe);
+                        string bashCommand = BashCommandBuilder.BuildBashWhichCommand(exe);
                         //string bashCommand = $"which {escapedExe}";
                         //string args = string.IsNullOrEmpty(wSL_Distro.Name)
                         //    ? $"bash -lic {FilenameHelper.BashEscape(bashCommand)}"
@@ -416,7 +416,7 @@ namespace DotNetPythonBridge
                 return PythonEnvironments.Environments;
             }
 
-            var result = await ProcessHelper.RunProcess(await GetCondaOrMambaPath(), "info --json");
+            var result = await ProcessHelper.RunProcess(await GetCondaOrMambaPath(), new[] { "info", "--json" });
 
             if (result.ExitCode != 0)
             {
@@ -475,7 +475,7 @@ namespace DotNetPythonBridge
 
             if (wslDistro != null) // A specific distro is provided
             {
-                string buildBashCondaCommand = FilenameHelper.BuildBashCondaCommand(await GetCondaOrMambaPathWSL(wslDistro), "info --json");
+                string buildBashCondaCommand = BashCommandBuilder.BuildBashCondaCommand(await GetCondaOrMambaPathWSL(wslDistro), "info --json");
                 var result = await ProcessHelper.RunProcess("wsl", new[] { "-d", wslDistro.Name, "bash", "-lic", buildBashCondaCommand });
 
                 //string escapedCondaPath = FilenameHelper.BashEscape(await GetCondaOrMambaPathWSL(wslDistro)); // escape any special chars in the conda path for bash
@@ -670,7 +670,7 @@ namespace DotNetPythonBridge
                     // Use bash -lic to properly source the environment in WSL, and wrap yamlFile in single quotes to avoid issues with special chars
                     //string bashCommand = $"bash -lic \"{escapedCondaPath} env create -f {escapedYamlFile}\"";
                     //result = await ProcessHelper.RunProcess("wsl", $"-d {wslDistro.Name} {bashCommand}");
-                    string bashCommand = FilenameHelper.BuildBashCreateCondaEnvCmd(await GetCondaOrMambaPathWSL(wslDistro), yamlFile, null);
+                    string bashCommand = BashCommandBuilder.BuildBashCreateCondaEnvCmd(await GetCondaOrMambaPathWSL(wslDistro), yamlFile, null);
                     result = await ProcessHelper.RunProcess("wsl", new[] { "-d", wslDistro.Name, "bash", "-lic", bashCommand });
                 }
                 else // use specified env name to override name in YAML
@@ -679,7 +679,7 @@ namespace DotNetPythonBridge
                     //string bashCommand = $"bash -lic \"{escapedCondaPath} env create -n {escapedEnvName} -f {escapedYamlFile}\"";
                     // Use bash -lic to properly source the environment in WSL, and wrap yamlFile in single quotes to avoid issues with special chars
                     //result = await ProcessHelper.RunProcess("wsl", $"-d {wslDistro.Name} {bashCommand}");
-                    string bashCommand = FilenameHelper.BuildBashCreateCondaEnvCmd(await GetCondaOrMambaPathWSL(wslDistro), yamlFile, envName);
+                    string bashCommand = BashCommandBuilder.BuildBashCreateCondaEnvCmd(await GetCondaOrMambaPathWSL(wslDistro), yamlFile, envName);
                     result = await ProcessHelper.RunProcess("wsl", new[] { "-d", wslDistro.Name, "bash", "-lic", bashCommand });
                 }
 
@@ -719,6 +719,7 @@ namespace DotNetPythonBridge
             Log.Logger.LogInformation(envName != null ? $"Deleting conda environment '{envName}'" : "Deleting base conda environment...");
 
             var result = await ProcessHelper.RunProcess(await GetCondaOrMambaPath(), $"env remove -n {envName} --yes");
+
             if (result.ExitCode != 0)
             {
                 Log.Logger.LogError($"Failed to delete env {envName}: {result.Error}");
@@ -736,10 +737,11 @@ namespace DotNetPythonBridge
 
             if (wslDistro != null) // wslDistro is provided
             {
-                string bashCommand = FilenameHelper.BuildBashDeleteCondaEnvCmd(await GetCondaOrMambaPathWSL(wslDistro), envName);
+                string bashCommand = BashCommandBuilder.BuildBashDeleteCondaEnvCmd(await GetCondaOrMambaPathWSL(wslDistro), envName);
 
                 // Use bash -lic to properly source the environment in WSL
-                var result = await ProcessHelper.RunProcess("wsl", $"-d {wslDistro.Name} {bashCommand}");
+                //var result = await ProcessHelper.RunProcess("wsl", $"-d {wslDistro.Name} bash -lic {bashCommand}");
+                var result = await ProcessHelper.RunProcess("wsl", new[] { "-d", wslDistro.Name, "bash", "-lic", bashCommand });
 
                 if (result.ExitCode != 0)
                 {
