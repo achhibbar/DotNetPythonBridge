@@ -12,7 +12,7 @@ namespace DotNetPythonBridge
         /// Run a Python script inside the given environment.
         /// If wSL_Distro is provided, runs inside the specified WSL distribution.
         /// </summary>
-        public static async Task<PythonResult> RunScript(string scriptPath, PythonEnvironment? env = null, string arguments = "")
+        public static async Task<PythonResult> RunScript(string scriptPath, PythonEnvironment? env = null, string[] arguments = null)
         {
             // Log the execution details, handle null env
             Log.Logger.LogInformation($"Running script: {scriptPath} with arguments: {arguments} in environment: {(env != null ? env.Name : "Base")}");
@@ -26,9 +26,19 @@ namespace DotNetPythonBridge
                 throw new FileNotFoundException($"Python script not found: {scriptPath}");
             }
 
-            //var result = await ProcessHelper.RunProcess(pythonExe, new[] { escapedScriptPath, arguments });
-            var result = await ProcessHelper.RunProcess(pythonExe, $"{escapedScriptPath} {arguments}");
-            //var result = await ProcessHelper.RunProcess(pythonExe, $"\"{scriptPath}\" {arguments}");
+            // quote and esape each argument in arguments
+            var argsList = new List<string>();
+            if (arguments != null)
+            {
+                foreach (var arg in arguments)
+                {
+                    argsList.Add(BashCommandBuilder.Escape(arg));
+                }
+            }
+            string argumentsEscaped = string.Join(" ", argsList);
+
+            var result = await ProcessHelper.RunProcess(pythonExe, $"{escapedScriptPath} {argumentsEscaped}");
+            //var result = await ProcessHelper.RunProcess(pythonExe, $"{escapedScriptPath} {arguments}");
             if (result.ExitCode != 0)
             {
                 Log.Logger.LogError($"Script execution failed with error: {result.Error}");
@@ -42,7 +52,7 @@ namespace DotNetPythonBridge
         /// Run a Python script inside the given environment.
         /// If wSL_Distro is provided, runs inside the specified WSL distribution.
         /// </summary>
-        public static async Task<PythonResult> RunScriptWSL(string scriptPath, PythonEnvironment? env = null, WSL_Helper.WSL_Distro? wSL_Distro = null, string arguments = "")
+        public static async Task<PythonResult> RunScriptWSL(string scriptPath, PythonEnvironment? env = null, WSL_Helper.WSL_Distro? wSL_Distro = null, string[] arguments = null)
         {
             Log.Logger.LogInformation($"Running script: {scriptPath} with arguments: {arguments} in environment: {(env != null ? env.Name : "Base")}, WSL: {(wSL_Distro != null ? wSL_Distro.Name : "Default")}");
 
@@ -60,8 +70,20 @@ namespace DotNetPythonBridge
                 throw new FileNotFoundException($"Python script not found: {scriptPath}");
             }
 
+            // quote and esape each argument in arguments
+            var argsList = new List<string>();
+            if (arguments != null)
+            {
+                foreach (var arg in arguments)
+                {
+                    argsList.Add(BashCommandBuilder.Escape(arg));
+                }
+            }
+            string argumentsEscaped = string.Join(" ", argsList);
+
+
             // Build the inner bash command safely
-            string bashCommand = BashCommandBuilder.BuildBashRunScriptCommand(pythonExe, FilenameHelper.convertWindowsPathToWSL(scriptPath), arguments);
+            string bashCommand = BashCommandBuilder.BuildBashRunScriptCommand(pythonExe, FilenameHelper.convertWindowsPathToWSL(scriptPath), argumentsEscaped);
 
             // Run the command using bash -lic to ensure the environment is loaded correctly
             // ensure the script path is converted to WSL path for the command

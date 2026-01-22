@@ -58,6 +58,13 @@ namespace DotNetPythonBridge.Utils
             }
         }
 
+        /// <summary>
+        /// Runner for processes with arg list
+        /// </summary>
+        /// <param name="file"></param>
+        /// <param name="arguments"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         internal static Task<PythonResult> RunProcess(
             string file,
             IEnumerable<string> arguments,
@@ -79,7 +86,7 @@ namespace DotNetPythonBridge.Utils
         }
 
         /// <summary>
-        /// Potential wrapper for RunProcess with string args, that will take over in future if needed
+        /// Wrapper for RunProcess with string args
         /// </summary>
         /// <param name="file"></param>
         /// <param name="args"></param>
@@ -104,6 +111,13 @@ namespace DotNetPythonBridge.Utils
             return RunProcessInternal(psi, cancellationToken);
         }
 
+        /// <summary>
+        /// Start and run a process, capturing output and error.
+        /// </summary>
+        /// <param name="psi"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
         private static async Task<PythonResult> RunProcessInternal(
             ProcessStartInfo psi,
             CancellationToken cancellationToken)
@@ -142,6 +156,15 @@ namespace DotNetPythonBridge.Utils
             return result;
         }
 
+        /// <summary>
+        /// Starter for processes with arg list used for long-running processes
+        /// </summary>
+        /// <param name="file"></param>
+        /// <param name="arguments"></param>
+        /// <param name="cancellationToken"></param>
+        /// <param name="onOutput"></param>
+        /// <param name="onError"></param>
+        /// <returns></returns>
         internal static Task<Process> StartProcess(
             string file,
             IEnumerable<string> arguments,
@@ -165,7 +188,7 @@ namespace DotNetPythonBridge.Utils
         }
 
         /// <summary>
-        /// Potential wrapper for StartProcess with string args, that will take over in future if needed
+        /// Wrapper for StartProcess with string args used for long-running processes
         internal static Task<Process> StartProcess(
             string file,
             string args,
@@ -190,6 +213,15 @@ namespace DotNetPythonBridge.Utils
             );
         }
 
+        /// <summary>
+        /// Start and run a process, capturing output and error via callbacks. Used for long-running processes.
+        /// </summary>
+        /// <param name="psi"></param>
+        /// <param name="cancellationToken"></param>
+        /// <param name="onOutput"></param>
+        /// <param name="onError"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
         private static Task<Process> StartProcessInternal(
             ProcessStartInfo psi,
             CancellationToken cancellationToken,

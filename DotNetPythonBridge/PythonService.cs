@@ -48,8 +48,9 @@ namespace DotNetPythonBridge
             // Resolve python executable inside the env
             string pythonExe = await PythonRunner.GetPythonExecutable(env);
 
-            // Arguments: script + port + user args
-            string[] args = { scriptPath, "--port", port.ToString(), options.DefaultServiceArgs };
+            // Arguments: script + port + user args, using bash escaping if needed
+            string[] args = { scriptPath, "--port", port.ToString(), BashCommandBuilder.BashEscape(BashCommandBuilder.Escape(options.DefaultServiceArgs)) };
+            //string[] args = { scriptPath, "--port", port.ToString(), options.DefaultServiceArgs };
 
             // give up the port reservation
             portReservation.Release();

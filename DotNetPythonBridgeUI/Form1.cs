@@ -274,7 +274,8 @@ namespace DotNetPythonBridgeUI
 
                 //run a python script in windows using the env
                 string scriptPath = @"F:\Ash docs\BTBP\c#\Ash projects\DotNetPythonBridgeUI\TestScript2.py";
-                string arguments = "Ash Nira"; //add any arguments if needed
+                //string arguments = "Ash Nira"; //add any arguments if needed
+                string[] arguments = new string[] { "Ash", "Nira" };
                 var pyResult = await PythonRunner.RunScript(scriptPath, env, arguments);
                 rtbPythonBridge.Text += "Running Python Script in Windows:" + Environment.NewLine;
                 rtbPythonBridge.Text += pyResult.Output + Environment.NewLine;
@@ -324,7 +325,8 @@ namespace DotNetPythonBridgeUI
                 if (defaultDistro != null)
                 {
                     var env = await CondaManager.GetEnvironmentWSL("SimpleITK_OpenCV_env", defaultDistro);
-                    var arguments = "Ash Nira"; //add any arguments if needed
+                    //var arguments = "Ash Nira"; //add any arguments if needed
+                    var arguments = new string[] { "Ash", "Nira" };
                     string scriptPath = @"F:\Ash docs\BTBP\c#\Ash projects\DotNetPythonBridgeUI\TestScript2.py";
                     var pyResult = await PythonRunner.RunScriptWSL(scriptPath, env, defaultDistro, arguments);
                     rtbPythonBridge.Text += "Running Python Script in WSL:" + Environment.NewLine;
@@ -530,7 +532,8 @@ namespace DotNetPythonBridgeUI
             {
                 //lazy run a python script in windows
                 string scriptPath = @"F:\Ash docs\BTBP\c#\Ash projects\DotNetPythonBridgeUI\TestScript2.py";
-                string arguments = "Ash Nira"; //add any arguments if needed
+                //string arguments = "Ash Nira"; //add any arguments if needed
+                string[] arguments = new string[] { "Ash", "Nira" };
                 var pyResult = await PythonRunner.RunScript(scriptPath, arguments: arguments); // no env provided, will use lazy init by using the base conda env
                 rtbPythonBridge.Text += "Running Python Script in Windows:" + Environment.NewLine;
                 rtbPythonBridge.Text += pyResult.Output + Environment.NewLine;
@@ -549,7 +552,8 @@ namespace DotNetPythonBridgeUI
             else // run in wsl
             {
                 //run a python script in wsl using the env
-                var arguments = "Ash Nira"; //add any arguments if needed
+                //var arguments = "Ash Nira"; //add any arguments if needed
+                var arguments = new string[] { "Ash", "Nira" };
                 string scriptPath = @"F:\Ash docs\BTBP\c#\Ash projects\DotNetPythonBridgeUI\TestScript2.py";
                 // no env or distro provided, will use lazy init by using the base conda env in default wsl distro
                 var pyResult = await PythonRunner.RunScriptWSL(scriptPath, arguments: arguments);

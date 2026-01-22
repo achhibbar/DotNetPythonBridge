@@ -31,15 +31,29 @@ namespace DotNetPythonBridge.Utils
             return $"'{bashSingleQuoted}'";
         }
 
-        /// <summary>
-        /// for launching service via bash -lc '...'
-        /// </summary>
-        /// <param name="pythonExe"></param>
-        /// <param name="wslScriptPath"></param>
-        /// <param name="port"></param>
-        /// <param name="options"></param>
-        /// <returns></returns>
-        internal static string BuildBashStartServiceCommand(
+        internal static string Escape(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+                return input;
+
+            // Escape special characters for bash
+            return input.Replace("\\", "\\\\") // Escape backslashes
+                        .Replace("'", "\\'") // Escape single quotes
+                        .Replace("\"", "\\\"") // Escape double quotes
+                        .Replace("`", "\\`") // Escape backticks
+                        .Replace("$", "\\$") // Escape dollar signs
+                        .Replace(" ", "\\ "); // Escape spaces
+        }
+
+            /// <summary>
+            /// for launching service via bash -lc '...'
+            /// </summary>
+            /// <param name="pythonExe"></param>
+            /// <param name="wslScriptPath"></param>
+            /// <param name="port"></param>
+            /// <param name="options"></param>
+            /// <returns></returns>
+            internal static string BuildBashStartServiceCommand(
         string pythonExe,
         string wslScriptPath,
         int port,
@@ -53,23 +67,33 @@ namespace DotNetPythonBridge.Utils
             };
 
             if (!string.IsNullOrWhiteSpace(options.DefaultServiceArgs))
-                args.Add(options.DefaultServiceArgs);
+                args.Add(BashEscape(options.DefaultServiceArgs));
+                //args.Add(options.DefaultServiceArgs);
 
             return string.Join(" ", args);
         }
 
         // for running arbitrary python scripts with arguments via bash -lc '...'
         internal static string BuildBashRunScriptCommand(
-        string pythonExe,
-        string wslScriptPath,
-        string pyScriptArgs)
+            string pythonExe,
+            string wslScriptPath,
+            string pyScriptArgs)
         {
             var args = new List<string>
             {
                 BashEscape(pythonExe),
-                BashEscape(wslScriptPath),
-                pyScriptArgs
+                BashEscape(wslScriptPath)
             };
+
+            // Split the arguments by spaces and escape each one
+            if (!string.IsNullOrWhiteSpace(pyScriptArgs))
+            {
+                var scriptArgs = pyScriptArgs.Split(' ');
+                foreach (var arg in scriptArgs)
+                {
+                    args.Add(BashEscape(arg));
+                }
+            }
 
             return string.Join(" ", args);
         }
