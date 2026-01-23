@@ -40,37 +40,40 @@ namespace DotNetPythonBridge
                 throw new FileNotFoundException($"Script not found: {scriptPath}");
             }
 
-            // Reserve port, if 0 then get free port, otherwise use specified port
-            var portReservation = PortHelper.ReservePort(options.DefaultPort);
-            int port = portReservation.Port;
-            //int port = options.DefaultPort == 0 ? PortHelper.GetFreePort() : options.DefaultPort; // if 0, get free port
-
             // Resolve python executable inside the env
             string pythonExe = await PythonRunner.GetPythonExecutable(env);
 
-            // Arguments: script + port + user args, using bash escaping if needed
-            string[] args = { scriptPath, "--port", port.ToString(), BashCommandBuilder.BashEscape(BashCommandBuilder.Escape(options.DefaultServiceArgs)) };
-            //string[] args = { scriptPath, "--port", port.ToString(), options.DefaultServiceArgs };
-
-            // give up the port reservation
-            portReservation.Release();
-
-            var proc = await ProcessHelper.StartProcess(pythonExe, args); // start the process using ArgumentList to avoid issues with spaces
-
-            var service = new PythonService(proc, port); // create service instance
-
-            Log.Logger.LogInformation($"Started Python service (PID: {service.Pid}) on port {service.Port} using script: {scriptPath}");
-
-            // Optional health check
-            if (options.HealthCheckEnabled && !await service.WaitForHealthCheck(options))
+            // if the service fails to become healthy, retry up to 3 times
+            for (int i = 0; i < options.ServiceRetryCount; i++)
             {
-                await service.Stop();
-                throw new Exception("Python service failed to become healthy.");
+                // Reserve port, if 0 then get free port, otherwise use specified port
+                var portReservation = PortHelper.ReservePort(options.DefaultPort);
+                int port = portReservation.Port;
+                //int port = options.DefaultPort == 0 ? PortHelper.GetFreePort() : options.DefaultPort; // if 0, get free port
+
+                // Arguments: script + port + user args, using bash escaping if needed
+                string[] args = { scriptPath, "--port", port.ToString(), BashCommandBuilder.BashEscape(BashCommandBuilder.Escape(options.DefaultServiceArgs)) };
+                //string[] args = { scriptPath, "--port", port.ToString(), options.DefaultServiceArgs };
+
+                // give up the port reservation
+                portReservation.Release();
+
+                var proc = await ProcessHelper.StartProcess(pythonExe, args); // start the process using ArgumentList to avoid issues with spaces
+
+                var service = new PythonService(proc, port); // create service instance
+
+                // Optional health check
+                if (options.HealthCheckEnabled && !await service.WaitForHealthCheck(options))
+                {
+                    // on failure, stop and retry
+                    await service.Stop();
+                    Log.Logger.LogWarning($"Python service (PID: {service.Pid}) failed health check on port {service.Port}. Retrying...");
+                    continue; // try again
+                }
+                Log.Logger.LogInformation($"Python service (PID: {service.Pid}) is healthy on port {service.Port}");
+                return service;
             }
-            Log.Logger.LogInformation($"Python service (PID: {service.Pid}) is healthy on port {service.Port}");
-
-
-            return service;
+            throw new Exception($"Python service failed to become healthy after {options.ServiceRetryCount} attempts.");
         }
 
         /// <summary>
@@ -103,39 +106,46 @@ namespace DotNetPythonBridge
             if (!File.Exists(scriptPath))
                 throw new FileNotFoundException($"Script not found: {scriptPath}");
 
-            // Reserve port
-            var portReservation = PortHelper.ReservePort(options.DefaultPort);
-            int port = portReservation.Port;
-
             // Resolve python path inside WSL
             string pythonExe = await PythonRunner.GetPythonExecutableWSL(env, wsl);
             string wslScriptPath = FilenameHelper.convertWindowsPathToWSL(scriptPath);
 
-            // Build the inner bash command safely
-            string bashCommand = BashCommandBuilder.BuildBashStartServiceCommand(pythonExe, wslScriptPath, port, options);
-
-            // Free port reservation after building bashCommand
-            portReservation.Release();
-
-            // Start process via WSL using ArgumentList
-            var proc = await ProcessHelper.StartProcess("wsl", new[] {"-d", wsl.Name, "bash", "-lc", bashCommand }); // already safely escaped
-
-            var service = new PythonService(proc, port, wsl);
-
-            Log.Logger.LogInformation(
-                $"Started Python service in WSL '{wsl.Name}' (PID: {service.Pid}) on port {port}");
-
-            // Optional health check
-            if (options.HealthCheckEnabled && !await service.WaitForHealthCheck(options))
+            // if the service fails to become healthy, retry up to 3 times
+            for (int i = 0; i < options.ServiceRetryCount; i++)
             {
-                await service.Stop();
-                throw new Exception("Python service failed to become healthy.");
+                // Reserve port
+                var portReservation = PortHelper.ReservePort(options.DefaultPort);
+                int port = portReservation.Port;
+
+                // Build the inner bash command safely
+                string bashCommand = BashCommandBuilder.BuildBashStartServiceCommand(pythonExe, wslScriptPath, port, options);
+
+                // Free port reservation after building bashCommand
+                portReservation.Release();
+
+                // Start process via WSL using ArgumentList
+                var proc = await ProcessHelper.StartProcess("wsl", new[] { "-d", wsl.Name, "bash", "-lc", bashCommand }); // already safely escaped
+
+                var service = new PythonService(proc, port, wsl);
+
+                Log.Logger.LogInformation(
+                    $"Started Python service in WSL '{wsl.Name}' (PID: {service.Pid}) on port {port}");
+
+                // Optional health check
+                if (options.HealthCheckEnabled && !await service.WaitForHealthCheck(options))
+                {
+                    // on failure, stop and retry
+                    await service.Stop();
+                    Log.Logger.LogWarning($"Python service in WSL '{wsl.Name}' (PID: {service.Pid}) failed health check on port {port}. Retrying...");
+                    continue; // try again
+                }
+
+                Log.Logger.LogInformation(
+                    $"Python service (PID: {service.Pid}) is healthy on port {port}");
+
+                return service;
             }
-
-            Log.Logger.LogInformation(
-                $"Python service (PID: {service.Pid}) is healthy on port {port}");
-
-            return service;
+            throw new Exception($"Python service failed to become healthy after {options.ServiceRetryCount} attempts.");
         }
 
 

@@ -43,6 +43,7 @@ namespace DotNetPythonBridge
         public int DefaultPort { get; set; } = 0; // 0 = auto
         public string DefaultServiceArgs { get; set; } = "--host 127.0.0.1";
         public bool HealthCheckEnabled { get; set; } = true; // by default perform health check after starting service
+        public int ServiceRetryCount { get; set; } = 3; // number of times to retry starting the service if health check fails
 
         // Timeouts
         public int HealthCheckTimeoutSeconds { get; set; } = 5;
