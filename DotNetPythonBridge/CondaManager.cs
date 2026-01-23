@@ -11,6 +11,9 @@ namespace DotNetPythonBridge
 {
     public static class CondaManager
     {
+        // Lock object for thread-safe initialization
+        private static readonly object _initLock = new object();
+
         private static string? _condaPath;
         private static string? _WSL_condaPath;
         private static string? _WSL_distroName;
@@ -50,10 +53,14 @@ namespace DotNetPythonBridge
             if (reinitialize) // reinit requested, clear existing paths
             {
                 Log.Logger.LogInformation("Reinitializing CondaManager, clearing existing paths.");
-                _condaPath = null;
-                _WSL_condaPath = null;
-                _WSL_distroName = null;
-                _isInitialized = false;
+                //_condaPath = null;
+                //_WSL_condaPath = null;
+                //_WSL_distroName = null;
+                //_isInitialized = false;
+                updateCondaPath(null);
+                updateWSLCondaPath(null);
+                updateWSLDistroName(null);
+                updateIsInitialized(false);
             }
 
             if (options != null)// options is provided, use it to initialize paths
@@ -63,7 +70,8 @@ namespace DotNetPythonBridge
 
                 if (string.IsNullOrEmpty(options.DefaultCondaPath))// if no conda path provided, attempt to auto-detect
                 {
-                    _condaPath = await GetCondaOrMambaPath();
+                    var cpath = await GetCondaOrMambaPath();
+                    updateCondaPath(cpath); // set the conda path with a lock 
 
                     // get all the conda/mamba envs, if reinitialize is true, force refresh
                     await ListEnvironments(refresh: reinitialize);
@@ -77,7 +85,9 @@ namespace DotNetPythonBridge
                     }
                     else // if the provided path is valid, use it
                     {
-                        _condaPath = options.DefaultCondaPath;
+                        var cpath = options.DefaultCondaPath;
+                        updateCondaPath(cpath); // set the conda path with a lock
+
                         // get all the conda/mamba envs, if reinitialize is true, force refresh
                         await ListEnvironments(refresh: reinitialize);
                     }
@@ -117,26 +127,32 @@ namespace DotNetPythonBridge
                         }
                     }
 
-                    _WSL_condaPath = options.DefaultWSLCondaPath;
-                    _WSL_distroName = options.DefaultWSLDistro;
+                    updateWSLCondaPath(options.DefaultWSLCondaPath); // set the wsl conda path and distro with a lock
+                    updateWSLDistroName(options.DefaultWSLDistro); // set the wsl distro name with a lock
+                    //_WSL_condaPath = options.DefaultWSLCondaPath;
+                    //_WSL_distroName = options.DefaultWSLDistro;
 
                     // get all the conda/mamba envs in WSL, if reinitialize is true, force refresh
                     await ListEnvironmentsWSL(WSL, refresh: reinitialize);
                 }
                 else if (options.DefaultWSLDistro != null) // if only wsl distro is provided, attempt to auto-detect conda/mamba path in that distro
                 {
-                    _WSL_distroName = options.DefaultWSLDistro;
+                    updateWSLDistroName(options.DefaultWSLDistro); // set the wsl distro name with a lock
+                    //_WSL_distroName = options.DefaultWSLDistro;
 
                     try
                     {
-                        _WSL_condaPath = await GetCondaOrMambaPathWSL(new WSL_Helper.WSL_Distro(_WSL_distroName, false));
+                        var wslcpath = await GetCondaOrMambaPathWSL(new WSL_Helper.WSL_Distro(_WSL_distroName, false));
+                        updateWSLCondaPath(wslcpath); // set the wsl conda path with a lock
+
                         // get all the conda/mamba envs in WSL, if reinitialize is true, force refresh
                         await ListEnvironmentsWSL(WSL, refresh: reinitialize);
                     }
                     catch (Exception ex)
                     {
                         Log.Logger.LogWarning($"Failed to auto-detect conda/mamba in WSL Distro {_WSL_distroName}: {ex.Message}");
-                        _WSL_condaPath = null; // leave it null, user can set it later
+                        updateWSLCondaPath(null); // set the wsl conda path to null with a lock
+                        //_WSL_condaPath = null; // leave it null, user can set it later
                     }
                 }
                 else // if neither wsl distro nor wsl conda path is provided, do nothing and leave them null
@@ -144,31 +160,36 @@ namespace DotNetPythonBridge
 
                 }
 
-                _isInitialized = true;
+                //_isInitialized = true;
+                updateIsInitialized(true); // set the isInitialized flag with a lock
             }
             else // if no options provided, attempt to auto-detect conda/mamba path. Lazy initialization
             {
                 Log.Logger.LogInformation("Initializing CondaManager without options, will attempt to auto-detect conda/mamba path on first use.");
 
-                _condaPath = await GetCondaOrMambaPath();
+                var cpath = await GetCondaOrMambaPath();
+                updateCondaPath(cpath); // set the conda path with a lock
                 
                 // get all the conda/mamba envs, if reinitialize is true, force refresh
                 await ListEnvironments(refresh: reinitialize);
                 var dstrs = await WSL_Helper.GetWSLDistros(refresh: reinitialize); // ensure WSL is available
-                _WSL_distroName = dstrs.GetDefaultDistro()?.Name; // get the default WSL distro if available
+                var wsldname = dstrs.GetDefaultDistro()?.Name; // get the default WSL distro if available
+                updateWSLDistroName(wsldname); // set the wsl distro name with a lock
 
                 if (!string.IsNullOrEmpty(_WSL_distroName))
                 {
                     try
                     {
-                        _WSL_condaPath = await GetCondaOrMambaPathWSL(new WSL_Helper.WSL_Distro(_WSL_distroName, false));
+                        var wslcpath = await GetCondaOrMambaPathWSL(new WSL_Helper.WSL_Distro(_WSL_distroName, false));
+                        updateWSLCondaPath(wslcpath); // set the wsl conda path with a lock
                         // get all the conda/mamba envs in WSL, if reinitialize is true, force refresh
                         await ListEnvironmentsWSL(WSL, refresh: reinitialize);
                     }
                     catch (Exception ex)
                     {
                         Log.Logger.LogWarning($"Failed to auto-detect conda/mamba in WSL Distro {_WSL_distroName}: {ex.Message}");
-                        _WSL_condaPath = null; // leave it null, user can set it later
+                        //_WSL_condaPath = null; // leave it null, user can set it later
+                        updateWSLCondaPath(null); // set the wsl conda path to null with a lock
                     }
                 }
                 else
@@ -176,7 +197,8 @@ namespace DotNetPythonBridge
                     Log.Logger.LogInformation("No default WSL distro found, skipping WSL conda/mamba auto-detection.");
                 }
 
-                _isInitialized = true;
+                //_isInitialized = true;
+                updateIsInitialized(true); // set the isInitialized flag with a lock
             }
             
         }
@@ -185,12 +207,19 @@ namespace DotNetPythonBridge
         {
             Log.Logger.LogInformation("Resetting CondaManager...");
 
-            _condaPath = null;
-            _WSL_condaPath = null;
-            _WSL_distroName = null;
-            PythonEnvironments = null;
-            PythonEnvironmentsWSL = null;
-            _isInitialized = false;
+            //_condaPath = null;
+            //_WSL_condaPath = null;
+            //_WSL_distroName = null;
+            //PythonEnvironments = null;
+            //PythonEnvironmentsWSL = null;
+            //_isInitialized = false;
+
+            updateCondaPath(null);
+            updateWSLCondaPath(null);
+            updateWSLDistroName(null);
+            updatePythonEnvironments(null);
+            updatePythonEnvironmentsWSL(null);
+            updateIsInitialized(false);
         }
 
         public static async Task<string> GetCondaOrMambaPath()
@@ -221,7 +250,8 @@ namespace DotNetPythonBridge
                         var candidate = result.Output.Trim().Split('\n')[0].Trim();
                         if (File.Exists(candidate))
                         {
-                            _condaPath = candidate;
+                            updateCondaPath(candidate);
+                            //_condaPath = candidate;
                             Log.Logger.LogInformation($"Found conda/mamba at: {_condaPath}");
                             return _condaPath;
                         }
@@ -267,7 +297,8 @@ namespace DotNetPythonBridge
             {
                 if (File.Exists(candidate))
                 {
-                    _condaPath = candidate;
+                    updateCondaPath(candidate);
+                    //_condaPath = candidate;
                     Log.Logger.LogInformation($"Found conda/mamba at: {_condaPath}");
                     return _condaPath;
                 }
@@ -360,7 +391,8 @@ namespace DotNetPythonBridge
                             var candidate = result.Output.Trim().Split('\n')[0].Trim();
                             if (!string.IsNullOrEmpty(candidate))
                             {
-                                _WSL_condaPath = candidate;
+                                updateWSLCondaPath(candidate);
+                                //_WSL_condaPath = candidate;
                                 Log.Logger.LogInformation($"Found conda/mamba in WSL at: {_WSL_condaPath}");
                                 return _WSL_condaPath;
                             }
@@ -386,7 +418,8 @@ namespace DotNetPythonBridge
                 if (string.IsNullOrEmpty(_WSL_distroName)) // if no initialized distro, try to get the default one
                 {
                     // try to get the default WSL distro
-                    _WSL_distroName = (await WSL_Helper.GetWSLDistros()).GetDefaultDistro()?.Name;
+                    var wsldname = (await WSL_Helper.GetWSLDistros()).GetDefaultDistro()?.Name;
+                    updateWSLDistroName(wsldname); // set the wsl distro name with a lock
 
                     if (string.IsNullOrEmpty(_WSL_distroName))
                     {
@@ -427,17 +460,21 @@ namespace DotNetPythonBridge
             using var doc = JsonDocument.Parse(result.Output);
             var envs = new List<PythonEnvironment>();
 
-            // get the root environment path for the base env
-            if (doc.RootElement.TryGetProperty("default_prefix", out var rootEnvPath))
+            // get the root environment path for the base env and ensure it's not null
+            if (doc.RootElement.TryGetProperty("default_prefix", out var rootEnvPath) && doc.RootElement.GetProperty("default_prefix").ValueKind != JsonValueKind.Null)
             {
                 string rootPath = rootEnvPath.GetString() ?? "";
                 //string rootName = Path.GetFileName(rootPath);
                 envs.Add(new PythonEnvironment("base", rootPath));
                 Log.Logger.LogInformation($"Found root environment: base at {rootPath}");
             }
+            else
+            {
+                Log.Logger.LogWarning("default_prefix not found or is null in conda info output.");
+            }
 
 
-            if (doc.RootElement.TryGetProperty("envs", out var arr))
+            if (doc.RootElement.TryGetProperty("envs", out var arr) && doc.RootElement.GetProperty("envs").ValueKind != JsonValueKind.Null)
             {
                 foreach (var envPath in arr.EnumerateArray())
                 {
@@ -450,6 +487,10 @@ namespace DotNetPythonBridge
                     envs.Add(new PythonEnvironment(name, path));
                     Log.Logger.LogInformation($"Found environment: {name} at {path}");
                 }
+            }
+            else
+            {
+                Log.Logger.LogWarning("envs not found or is null in conda info output.");
             }
 
             PythonEnvironments = new PythonEnvironments { Environments = envs };
@@ -492,16 +533,20 @@ namespace DotNetPythonBridge
                 using var doc = JsonDocument.Parse(result.Output);
                 var envs = new List<PythonEnvironment>();
 
-                // get the root environment path for the base env
-                if (doc.RootElement.TryGetProperty("default_prefix", out var rootEnvPath))
+                // get the root environment path for the base env and ensure it's not null
+                if (doc.RootElement.TryGetProperty("default_prefix", out var rootEnvPath) && doc.RootElement.GetProperty("default_prefix").ValueKind != JsonValueKind.Null)
                 {
                     string rootPath = rootEnvPath.GetString() ?? "";
                     //string rootName = Path.GetFileName(rootPath);
                     envs.Add(new PythonEnvironment("base", rootPath));
                     Log.Logger.LogInformation($"Found root environment: base at {rootPath}");
                 }
+                else
+                {
+                    Log.Logger.LogWarning("default_prefix not found or is null in conda info output.");
+                }
 
-                if (doc.RootElement.TryGetProperty("envs", out var arr))
+                if (doc.RootElement.TryGetProperty("envs", out var arr) && doc.RootElement.GetProperty("envs").ValueKind != JsonValueKind.Null)
                 {
                     foreach (var envPath in arr.EnumerateArray())
                     {
@@ -515,6 +560,10 @@ namespace DotNetPythonBridge
                         Log.Logger.LogInformation($"Found environment: {name} at {path} in WSL Distro {wslDistro.Name}");
                     }
                 }
+                else
+                {
+                    Log.Logger.LogWarning("envs not found or is null in conda info output.");
+                }
 
                 PythonEnvironmentsWSL = new PythonEnvironments { Environments = envs };
                 return envs;
@@ -527,7 +576,8 @@ namespace DotNetPythonBridge
                 }
 
                 // try to get the default WSL distro
-                _WSL_distroName = (await WSL_Helper.GetWSLDistros()).GetDefaultDistro()?.Name;
+                var wsldname = (await WSL_Helper.GetWSLDistros()).GetDefaultDistro()?.Name;
+                updateWSLDistroName(wsldname); // set the wsl distro name with a lock
 
                 if (string.IsNullOrEmpty(_WSL_distroName))
                 {
@@ -600,7 +650,8 @@ namespace DotNetPythonBridge
                 }
 
                 // try to get the default WSL distro
-                _WSL_distroName = (await WSL_Helper.GetWSLDistros()).GetDefaultDistro()?.Name;
+                var wsldname = (await WSL_Helper.GetWSLDistros()).GetDefaultDistro()?.Name;
+                updateWSLDistroName(wsldname); // set the wsl distro name with a lock
 
                 if (string.IsNullOrEmpty(_WSL_distroName))
                 {
@@ -698,7 +749,8 @@ namespace DotNetPythonBridge
                 }
 
                 // try to get the default WSL distro
-                _WSL_distroName = (await WSL_Helper.GetWSLDistros()).GetDefaultDistro()?.Name;
+                var wsldname = (await WSL_Helper.GetWSLDistros()).GetDefaultDistro()?.Name;
+                updateWSLDistroName(wsldname); // set the wsl distro name with a lock
 
                 if (string.IsNullOrEmpty(_WSL_distroName))
                 {
@@ -758,7 +810,8 @@ namespace DotNetPythonBridge
                 }
 
                 // try to get the default WSL distro
-                _WSL_distroName = (await WSL_Helper.GetWSLDistros()).GetDefaultDistro()?.Name;
+                var wsldname = (await WSL_Helper.GetWSLDistros()).GetDefaultDistro()?.Name;
+                updateWSLDistroName(wsldname); // set the wsl distro name with a lock
 
                 if (string.IsNullOrEmpty(_WSL_distroName))
                 {
@@ -772,5 +825,58 @@ namespace DotNetPythonBridge
 
         }
 
+        // Thread-safe update of _isInitialized
+        private static void updateIsInitialized(bool value)
+        {
+            lock (_initLock)
+            {
+                _isInitialized = value;
+            }
+        }
+
+        // Thread-safe update of _condaPath
+        private static void updateCondaPath(string? path)
+        {
+            lock (_initLock)
+            {
+                _condaPath = path;
+            }
+        }
+
+        // Thread-safe update of _WSL_condaPath
+        private static void updateWSLCondaPath(string? path)
+        {
+            lock (_initLock)
+            {
+                _WSL_condaPath = path;
+            }
+        }
+
+        // Thread-safe update of _WSL_distroName
+        private static void updateWSLDistroName(string? name)
+        {
+            lock (_initLock)
+            {
+                _WSL_distroName = name;
+            }
+        }
+
+        // Thread-safe update of PythonEnvironments
+        private static void updatePythonEnvironments(PythonEnvironments? envs)
+        {
+            lock (_initLock)
+            {
+                PythonEnvironments = envs;
+            }
+        }
+
+        // Thread-safe update of PythonEnvironmentsWSL
+        private static void updatePythonEnvironmentsWSL(PythonEnvironments? envs)
+        {
+            lock (_initLock)
+            {
+                PythonEnvironmentsWSL = envs;
+            }
+        }
     }
 }
