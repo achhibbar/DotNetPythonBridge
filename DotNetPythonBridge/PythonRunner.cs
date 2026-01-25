@@ -37,7 +37,7 @@ namespace DotNetPythonBridge
             }
             string argumentsEscaped = string.Join(" ", argsList);
 
-            var result = await ProcessHelper.RunProcess(pythonExe, $"{escapedScriptPath} {argumentsEscaped}");
+            var result = await ProcessHelper.RunProcess(pythonExe, $"{escapedScriptPath} {argumentsEscaped}"); //&
             //var result = await ProcessHelper.RunProcess(pythonExe, $"{escapedScriptPath} {arguments}");
             if (result.ExitCode != 0)
             {

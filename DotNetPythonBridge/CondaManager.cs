@@ -230,7 +230,7 @@ namespace DotNetPythonBridge
                 try
                 {
                     var whichCmd = isWindows ? "where" : "which";
-                    var result = await ProcessHelper.RunProcess(whichCmd, exe);
+                    var result = await ProcessHelper.RunProcess(whichCmd, exe); //&
                     if (result.ExitCode == 0 && !string.IsNullOrWhiteSpace(result.Output))
                     {
                         var candidate = result.Output.Trim().Split('\n')[0].Trim();
@@ -435,7 +435,7 @@ namespace DotNetPythonBridge
                 return PythonEnvironments.Environments;
             }
 
-            var result = await ProcessHelper.RunProcess(await GetCondaOrMambaPath(), new[] { "info", "--json" });
+            var result = await ProcessHelper.RunProcess(await GetCondaOrMambaPath(), new[] { "info", "--json" }); //%
 
             if (result.ExitCode != 0)
             {
@@ -502,7 +502,7 @@ namespace DotNetPythonBridge
 
             if (wslDistro != null) // A specific distro is provided
             {
-                string buildBashCondaCommand = BashCommandBuilder.BuildBashCondaCommand(await GetCondaOrMambaPathWSL(wslDistro), "info --json");
+                string buildBashCondaCommand = BashCommandBuilder.BuildBashCondaCommand(await GetCondaOrMambaPathWSL(wslDistro), "info --json"); //%
                 var result = await ProcessHelper.RunProcess("wsl", new[] { "-d", wslDistro.Name, "bash", "-lic", buildBashCondaCommand });
 
                 //string escapedCondaPath = FilenameHelper.BashEscape(await GetCondaOrMambaPathWSL(wslDistro)); // escape any special chars in the conda path for bash
@@ -668,11 +668,11 @@ namespace DotNetPythonBridge
 
             if (string.IsNullOrEmpty(envName)) // use env name from YAML
             {
-                result = await ProcessHelper.RunProcess(await GetCondaOrMambaPath(), $"env create -f {yamlFilepathQuoted}");
+                result = await ProcessHelper.RunProcess(await GetCondaOrMambaPath(), $"env create -f {yamlFilepathQuoted}"); //&
             }
             else // use specified env name to override name in YAML
             {
-                result = await ProcessHelper.RunProcess(await GetCondaOrMambaPath(), $"env create -n {envName} -f {yamlFilepathQuoted}");
+                result = await ProcessHelper.RunProcess(await GetCondaOrMambaPath(), $"env create -n {envName} -f {yamlFilepathQuoted}"); //&
             }
 
             if (result.ExitCode != 0)
@@ -756,7 +756,7 @@ namespace DotNetPythonBridge
         {
             Log.Logger.LogInformation(envName != null ? $"Deleting conda environment '{envName}'" : "Deleting base conda environment...");
 
-            var result = await ProcessHelper.RunProcess(await GetCondaOrMambaPath(), $"env remove -n {envName} --yes");
+            var result = await ProcessHelper.RunProcess(await GetCondaOrMambaPath(), $"env remove -n {envName} --yes"); //&
 
             if (result.ExitCode != 0)
             {

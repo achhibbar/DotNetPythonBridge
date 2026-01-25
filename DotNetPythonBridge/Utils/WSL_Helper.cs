@@ -34,7 +34,8 @@ namespace DotNetPythonBridge.Utils
 
             try
             {
-                var result = await ProcessHelper.RunProcess("wsl", "-l -v");
+                CancellationToken cancellationToken = new CancellationToken();
+                var result = await ProcessHelper.RunProcess("wsl", "-l -v", cancellationToken, Encoding.Unicode); //& use Unicode encoding to handle possible non-ASCII characters
                 if (result.ExitCode == 0 && !string.IsNullOrWhiteSpace(result.Output))
                 {
                     //store the distris in WSL_Distro object
@@ -122,7 +123,7 @@ namespace DotNetPythonBridge.Utils
             for (int i = 0; i < 3; i++)
             {
                 //string escapedDistroName = FilenameHelper.BashEscape(wslDistro.Name);
-                var result = await ProcessHelper.RunProcess("wsl", $"-d {wslDistro.Name} echo WSL Distro Warmed Up");
+                var result = await ProcessHelper.RunProcess("wsl", $"-d {wslDistro.Name} echo WSL Distro Warmed Up"); //&
                 //var result = await ProcessHelper.RunProcess("wsl", $"-d {escapedDistroName} echo WSL Distro Warmed Up");
 
                 if (result.ExitCode == 0)

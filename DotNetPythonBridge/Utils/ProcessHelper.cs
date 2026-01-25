@@ -17,46 +17,46 @@ namespace DotNetPythonBridge.Utils
         /// <param name="file"></param>
         /// <param name="args"></param>
         /// <returns></returns>
-        private static Encoding GetEncodingForProcess(string file, string args)
-        {
-            // If running WSL bash on Windows, use UTF-8 encoding. This is to get conda/mamba paths correctly for wsl distros.
-            // This is also used when running python scripts or code in WSL on Windows.
-            if (OperatingSystem.IsWindows() && file.ToLower().Contains("wsl") && args.ToLower().Contains("bash"))
-            {
-                return Encoding.UTF8;
-            }
-            // Windows + conda info
-            else if (OperatingSystem.IsWindows() && args.ToLower().Contains("info"))
-            {
-                return Encoding.GetEncoding("utf-8"); // Use UTF-8 and not Encoding.UTF8 to avoid BOM issues
-                //return Encoding.UTF8;
-            }
-            //when running a python script on windows, the output is in utf-8
-            else if (OperatingSystem.IsWindows() && file.ToLower().Contains("python") && args.ToLower().Contains(".py"))
-            {
-                return Encoding.UTF8;
-            }
-            // when running python code on windows, the output is in utf-8
-            else if (OperatingSystem.IsWindows() && file.ToLower().Contains("python") && args.ToLower().Contains("-c"))
-            {
-                return Encoding.UTF8;
-            }
-            // else if (OperatingSystem.IsWindows() && getting a list of wsl distros
-            else if (OperatingSystem.IsWindows() && file.ToLower().Contains("wsl") && args.ToLower().Contains("-l"))
-            {
-                return Encoding.Unicode;
-            }
-            // Windows
-            else if (OperatingSystem.IsWindows())
-            {
-                return Encoding.UTF8;
-            }
-            // Linux and MacOS
-            else
-            {
-                return Encoding.UTF8;
-            }
-        }
+        //private static Encoding GetEncodingForProcess(string file, string args)
+        //{
+        //    // If running WSL bash on Windows, use UTF-8 encoding. This is to get conda/mamba paths correctly for wsl distros.
+        //    // This is also used when running python scripts or code in WSL on Windows.
+        //    if (OperatingSystem.IsWindows() && file.ToLower().Contains("wsl") && args.ToLower().Contains("bash"))
+        //    {
+        //        return Encoding.UTF8;
+        //    }
+        //    // Windows + conda info
+        //    else if (OperatingSystem.IsWindows() && args.ToLower().Contains("info"))
+        //    {
+        //        return Encoding.GetEncoding("utf-8"); // Use UTF-8 and not Encoding.UTF8 to avoid BOM issues
+        //        //return Encoding.UTF8;
+        //    }
+        //    //when running a python script on windows, the output is in utf-8
+        //    else if (OperatingSystem.IsWindows() && file.ToLower().Contains("python") && args.ToLower().Contains(".py"))
+        //    {
+        //        return Encoding.UTF8;
+        //    }
+        //    // when running python code on windows, the output is in utf-8
+        //    else if (OperatingSystem.IsWindows() && file.ToLower().Contains("python") && args.ToLower().Contains("-c"))
+        //    {
+        //        return Encoding.UTF8;
+        //    }
+        //    // else if (OperatingSystem.IsWindows() && getting a list of wsl distros
+        //    else if (OperatingSystem.IsWindows() && file.ToLower().Contains("wsl") && args.ToLower().Contains("-l"))
+        //    {
+        //        return Encoding.Unicode;
+        //    }
+        //    // Windows
+        //    else if (OperatingSystem.IsWindows())
+        //    {
+        //        return Encoding.UTF8;
+        //    }
+        //    // Linux and MacOS
+        //    else
+        //    {
+        //        return Encoding.UTF8;
+        //    }
+        //}
 
         /// <summary>
         /// Runner for processes with arg list
@@ -68,15 +68,21 @@ namespace DotNetPythonBridge.Utils
         internal static Task<PythonResult> RunProcess(
             string file,
             IEnumerable<string> arguments,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default,
+            Encoding? encoding = null) // Changed to nullable
         {
+            // All calls to this overload use UTF-8
+            // Unicode is only used when getting WSL distros via the string args overload in the method below
+            encoding ??= Encoding.UTF8; // Assign default value if null
+
             var psi = new ProcessStartInfo
             {
                 FileName = file,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
-                CreateNoWindow = true
+                CreateNoWindow = true,
+                StandardOutputEncoding = encoding
             };
 
             foreach (var arg in arguments)
@@ -95,8 +101,14 @@ namespace DotNetPythonBridge.Utils
         internal static Task<PythonResult> RunProcess(
             string file,
             string args,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default,
+            Encoding? encoding = null) // Changed to nullable
         {
+            // The only time encoding is null is when called from WSL_Helper.GetWSLDistros
+            // which passes Encoding.Unicode
+            // In all other cases, we want to default to UTF-8
+            encoding ??= Encoding.UTF8; // Assign default value if null
+
             var psi = new ProcessStartInfo
             {
                 FileName = file,
@@ -105,7 +117,8 @@ namespace DotNetPythonBridge.Utils
                 RedirectStandardError = true,
                 UseShellExecute = false,
                 CreateNoWindow = true,
-                StandardOutputEncoding = GetEncodingForProcess(file, args)
+                StandardOutputEncoding = encoding
+                //StandardOutputEncoding = GetEncodingForProcess(file, args)
             };
 
             return RunProcessInternal(psi, cancellationToken);
@@ -170,8 +183,13 @@ namespace DotNetPythonBridge.Utils
             IEnumerable<string> arguments,
             CancellationToken cancellationToken = default,
             Action<string>? onOutput = null,
-            Action<string>? onError = null)
+            Action<string>? onError = null,
+            Encoding? encoding = null)
         {
+            // All calls to this overload use UTF-8
+            // This is called when starting a python service in Windows or WSL in PythonService class
+            encoding ??= Encoding.UTF8;
+
             var psi = new ProcessStartInfo
             {
                 FileName = file,
@@ -194,8 +212,11 @@ namespace DotNetPythonBridge.Utils
             string args,
             CancellationToken cancellationToken = default,
             Action<string>? onOutput = null,
-            Action<string>? onError = null)
+            Action<string>? onError = null,
+            Encoding? encoding = null)
         {
+            encoding ??= Encoding.UTF8;
+
             return StartProcessInternal(
                 new ProcessStartInfo
                 {
@@ -205,7 +226,8 @@ namespace DotNetPythonBridge.Utils
                     RedirectStandardError = true,
                     UseShellExecute = false,
                     CreateNoWindow = true,
-                    StandardOutputEncoding = GetEncodingForProcess(file, args)
+                    StandardOutputEncoding = encoding
+                    //StandardOutputEncoding = GetEncodingForProcess(file, args)
                 },
                 cancellationToken,
                 onOutput,
