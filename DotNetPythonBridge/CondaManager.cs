@@ -53,14 +53,7 @@ namespace DotNetPythonBridge
             if (reinitialize) // reinit requested, clear existing paths
             {
                 Log.Logger.LogInformation("Reinitializing CondaManager, clearing existing paths.");
-                //_condaPath = null;
-                //_WSL_condaPath = null;
-                //_WSL_distroName = null;
-                //_isInitialized = false;
-                updateCondaPath(null);
-                updateWSLCondaPath(null);
-                updateWSLDistroName(null);
-                updateIsInitialized(false);
+                Reset(); // clear existing paths and envs
             }
 
             if (options != null)// options is provided, use it to initialize paths
@@ -206,13 +199,6 @@ namespace DotNetPythonBridge
         public static void Reset()
         {
             Log.Logger.LogInformation("Resetting CondaManager...");
-
-            //_condaPath = null;
-            //_WSL_condaPath = null;
-            //_WSL_distroName = null;
-            //PythonEnvironments = null;
-            //PythonEnvironmentsWSL = null;
-            //_isInitialized = false;
 
             updateCondaPath(null);
             updateWSLCondaPath(null);

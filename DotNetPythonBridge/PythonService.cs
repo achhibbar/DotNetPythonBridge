@@ -198,6 +198,11 @@ namespace DotNetPythonBridge
             return false;
         }
 
+        /// <summary>
+        /// Stop the Python service gracefully, with optional force kill after timeout.
+        /// </summary>
+        /// <param name="options"></param>
+        /// <returns></returns>
         public async Task<bool> Stop(PythonServiceOptions? options = null)
         {
             options ??= new PythonServiceOptions();
@@ -229,7 +234,7 @@ namespace DotNetPythonBridge
                     await Task.Delay(100);
                 }
 
-
+                // _process is still running after timeout, force kill
                 if (_process != null && !_process.HasExited) // force kill if still running
                 {
                     _process.Kill(entireProcessTree: true);
@@ -245,6 +250,10 @@ namespace DotNetPythonBridge
                     }
                     Log.Logger.LogInformation($"Force killed Python service (PID: {Pid})");
                 }
+
+                // Dispose of the process and set it to null
+                _process?.Dispose();
+                _process = null;
 
                 //confirm the port is free
                 return PortHelper.checkIfPortIsFree(Port);
