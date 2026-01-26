@@ -289,7 +289,8 @@ namespace DotNetPythonBridge
             {
                 "-d", wSL_Distro.Name,
                 "bash", "-c", $"test -f {escapedExe} && echo exists || echo missing"
-            });
+            },
+            timeout: CondaManager.wsl_DistroDoesFileExistTimeout);
             //var checkResult = await ProcessHelper.RunProcess("wsl", $"-d {wSL_Distro.Name} {bashCmd}");
             //var checkResult = await ProcessHelper.RunProcess("wsl", $"-d {wSL_Distro.Name} bash -lic \"test -f {exe} && echo exists\"");
 

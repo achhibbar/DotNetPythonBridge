@@ -18,6 +18,7 @@ namespace DotNetPythonBridge
         private static string? _WSL_condaPath;
         private static string? _WSL_distroName;
         private static bool _isInitialized = false;
+        private static DotNetPythonBridgeOptions? _options = new DotNetPythonBridgeOptions(); // default options
 
         /// <summary>
         /// The WSL Distro being used, or null if not using WSL.
@@ -40,6 +41,8 @@ namespace DotNetPythonBridge
         public static PythonEnvironments? PythonEnvironments { get; private set; } = null;
         public static PythonEnvironments? PythonEnvironmentsWSL { get; private set; } = null;
 
+        internal static TimeSpan wsl_DistroDoesFileExistTimeout = TimeSpan.FromSeconds(10); // timeout for checking if file exists in WSL distro
+
         /// <summary>
         /// Initialize CondaManager with optional paths.
         /// </summary>
@@ -58,10 +61,13 @@ namespace DotNetPythonBridge
 
             if (options != null)// options is provided, use it to initialize paths
             {
-                Log.Logger.LogInformation($"Initializing CondaManager with condaPath: {options.DefaultCondaPath}, " +
-                    $"wslDistroName: {options.DefaultWSLDistro}, wslPath: {options.DefaultWSLCondaPath}");
+                updateOptions(options); // store options with a lock
+                updateWSL_DistrDoesFileExistTimeout(_options.WSL_DistroDoesFileExistTimeout); // set the wsl file exist timeout with a lock
 
-                if (string.IsNullOrEmpty(options.DefaultCondaPath))// if no conda path provided, attempt to auto-detect
+                Log.Logger.LogInformation($"Initializing CondaManager with condaPath: {_options.DefaultCondaPath}, " +
+                    $"wslDistroName: {_options.DefaultWSLDistro}, wslPath: {_options.DefaultWSLCondaPath}");
+
+                if (string.IsNullOrEmpty(_options.DefaultCondaPath))// if no conda path provided, attempt to auto-detect
                 {
                     var cpath = await GetCondaOrMambaPath();
                     updateCondaPath(cpath); // set the conda path with a lock 
@@ -71,14 +77,14 @@ namespace DotNetPythonBridge
                 }
                 else // if a conda path is provided, validate it
                 {
-                    if (!File.Exists(options.DefaultCondaPath)) // if the provided path does not exist, throw error
+                    if (!File.Exists(_options.DefaultCondaPath)) // if the provided path does not exist, throw error
                     {
-                        Log.Logger.LogError($"Conda not found at {options.DefaultCondaPath}");
-                        throw new FileNotFoundException($"Conda not found at {options.DefaultCondaPath}");
+                        Log.Logger.LogError($"Conda not found at {_options.DefaultCondaPath}");
+                        throw new FileNotFoundException($"Conda not found at {_options.DefaultCondaPath}");
                     }
                     else // if the provided path is valid, use it
                     {
-                        var cpath = options.DefaultCondaPath;
+                        var cpath = _options.DefaultCondaPath;
                         updateCondaPath(cpath); // set the conda path with a lock
 
                         // get all the conda/mamba envs, if reinitialize is true, force refresh
@@ -87,51 +93,52 @@ namespace DotNetPythonBridge
                 }
 
 
-                if (options.DefaultWSLCondaPath != null && options.DefaultWSLDistro != null) // if both wsl conda path and distro are provided, use them
+                if (_options.DefaultWSLCondaPath != null && _options.DefaultWSLDistro != null) // if both wsl conda path and distro are provided, use them
                 {
                     // convert the wslPath to windows path and check if it exists
-                    if (!File.Exists(FilenameHelper.convertDistroCondaPathToWindows(options.DefaultWSLDistro, options.DefaultWSLCondaPath)))
+                    if (!File.Exists(FilenameHelper.convertDistroCondaPathToWindows(_options.DefaultWSLDistro, _options.DefaultWSLCondaPath)))
                     {
-                        Log.Logger.LogError($"Conda not found at {options.DefaultWSLCondaPath} in WSL.");
-                        throw new FileNotFoundException($"Conda not found at {options.DefaultWSLCondaPath} in WSL.");
+                        Log.Logger.LogError($"Conda not found at {_options.DefaultWSLCondaPath} in WSL.");
+                        throw new FileNotFoundException($"Conda not found at {_options.DefaultWSLCondaPath} in WSL.");
                     }
 
                     // warm up the WSL distro before setting the path
-                    if (options.DefaultWSLDistro != null)
+                    if (_options.DefaultWSLDistro != null)
                     {
-                        var rslt = await WSL_Helper.WarmupWSL_Distro(options.DefaultWSLDistro);
+                        var rslt = await WSL_Helper.WarmupWSL_Distro(_options.DefaultWSLDistro, _options.WSL_WarmupTimeout);
                         if (rslt.ExitCode != 0)
                         {
-                            Log.Logger.LogError($"Failed to warm up WSL Distro {options.DefaultWSLDistro}: {rslt.Error}");
-                            throw new Exception($"Failed to warm up WSL Distro {options.DefaultWSLDistro}: {rslt.Error}");
+                            Log.Logger.LogError($"Failed to warm up WSL Distro {_options.DefaultWSLDistro}: {rslt.Error}");
+                            throw new Exception($"Failed to warm up WSL Distro {_options.DefaultWSLDistro}: {rslt.Error}");
                         }
 
                         // use which to verify the conda path exists in WSL
                         // convert the windows path to WSL path and build the which command
-                        string bashCommand = BashCommandBuilder.BuildBashWhichCommand(FilenameHelper.convertWindowsPathToWSL(options.DefaultWSLCondaPath));
+                        string bashCommand = BashCommandBuilder.BuildBashWhichCommand(FilenameHelper.convertWindowsPathToWSL(_options.DefaultWSLCondaPath));
                         // confirm the conda path exists in the warmed up distro
-                        //var whichResult = await ProcessHelper.RunProcess("wsl", $"-d {options.DefaultWSLDistro} {bashCommand}");
-                        var whichResult = await ProcessHelper.RunProcess("wsl", new[] { "-d", options.DefaultWSLDistro, "bash", "-lic", bashCommand });
+                        //var whichResult = await ProcessHelper.RunProcess("wsl", $"-d {_options.DefaultWSLDistro} {bashCommand}");
+                        var whichResult = await ProcessHelper.RunProcess("wsl", new[] { "-d", _options.DefaultWSLDistro, "bash", "-lic", bashCommand },
+                            timeout: _options.CondaWhichTimeout);
 
                         if (whichResult.ExitCode != 0 || string.IsNullOrWhiteSpace(whichResult.Output))
                         {
-                            Log.Logger.LogError($"Conda not found at {options.DefaultWSLCondaPath} in WSL Distro {options.DefaultWSLDistro}.");
-                            throw new FileNotFoundException($"Conda not found at {options.DefaultWSLCondaPath} in WSL Distro {options.DefaultWSLDistro}.");
+                            Log.Logger.LogError($"Conda not found at {_options.DefaultWSLCondaPath} in WSL Distro {_options.DefaultWSLDistro}.");
+                            throw new FileNotFoundException($"Conda not found at {_options.DefaultWSLCondaPath} in WSL Distro {_options.DefaultWSLDistro}.");
                         }
                     }
 
-                    updateWSLCondaPath(options.DefaultWSLCondaPath); // set the wsl conda path and distro with a lock
-                    updateWSLDistroName(options.DefaultWSLDistro); // set the wsl distro name with a lock
-                    //_WSL_condaPath = options.DefaultWSLCondaPath;
-                    //_WSL_distroName = options.DefaultWSLDistro;
+                    updateWSLCondaPath(_options.DefaultWSLCondaPath); // set the wsl conda path and distro with a lock
+                    updateWSLDistroName(_options.DefaultWSLDistro); // set the wsl distro name with a lock
+                    //_WSL_condaPath = _options.DefaultWSLCondaPath;
+                    //_WSL_distroName = _options.DefaultWSLDistro;
 
                     // get all the conda/mamba envs in WSL, if reinitialize is true, force refresh
                     await ListEnvironmentsWSL(WSL, refresh: reinitialize);
                 }
-                else if (options.DefaultWSLDistro != null) // if only wsl distro is provided, attempt to auto-detect conda/mamba path in that distro
+                else if (_options.DefaultWSLDistro != null) // if only wsl distro is provided, attempt to auto-detect conda/mamba path in that distro
                 {
-                    updateWSLDistroName(options.DefaultWSLDistro); // set the wsl distro name with a lock
-                    //_WSL_distroName = options.DefaultWSLDistro;
+                    updateWSLDistroName(_options.DefaultWSLDistro); // set the wsl distro name with a lock
+                    //_WSL_distroName = _options.DefaultWSLDistro;
 
                     try
                     {
@@ -156,8 +163,11 @@ namespace DotNetPythonBridge
                 //_isInitialized = true;
                 updateIsInitialized(true); // set the isInitialized flag with a lock
             }
-            else // if no options provided, attempt to auto-detect conda/mamba path. Lazy initialization
+            else // if no _options provided, attempt to auto-detect conda/mamba path. Lazy initialization
             {
+                updateOptions(new DotNetPythonBridgeOptions()); // store default options with a lock
+                updateWSL_DistrDoesFileExistTimeout(_options.WSL_DistroDoesFileExistTimeout); // set the wsl file exist timeout with a lock
+
                 Log.Logger.LogInformation("Initializing CondaManager without options, will attempt to auto-detect conda/mamba path on first use.");
 
                 var cpath = await GetCondaOrMambaPath();
@@ -206,6 +216,7 @@ namespace DotNetPythonBridge
             updatePythonEnvironments(null);
             updatePythonEnvironmentsWSL(null);
             updateIsInitialized(false);
+            updateOptions(new DotNetPythonBridgeOptions()); // reset options to default
         }
 
         public static async Task<string> GetCondaOrMambaPath()
@@ -230,7 +241,7 @@ namespace DotNetPythonBridge
                 try
                 {
                     var whichCmd = isWindows ? "where" : "which";
-                    var result = await ProcessHelper.RunProcess(whichCmd, exe); //&
+                    var result = await ProcessHelper.RunProcess(whichCmd, exe, timeout: _options.CondaWhichTimeout);
                     if (result.ExitCode == 0 && !string.IsNullOrWhiteSpace(result.Output))
                     {
                         var candidate = result.Output.Trim().Split('\n')[0].Trim();
@@ -316,7 +327,7 @@ namespace DotNetPythonBridge
 
                 // since _WSL_condaPath is not set, this is the first time we are trying to find it in WSL
                 // so this distro may need to be warmed up first
-                var rslt = await WSL_Helper.WarmupWSL_Distro(wSL_Distro);
+                var rslt = await WSL_Helper.WarmupWSL_Distro(wSL_Distro, _options.WSL_WarmupTimeout);
                 if (rslt.ExitCode != 0)
                 {
                     Log.Logger.LogError($"Failed to warm up WSL Distro {wSL_Distro.Name}: {rslt.Error}");
@@ -345,7 +356,7 @@ namespace DotNetPythonBridge
                         //    ? $"bash -lic \"which {escapedExe}\"" // if no distro is specified, run in default distro
                         //    : $"-d {wSL_Distro.Name} bash -lic \"which {escapedExe}\""; // if distro is specified, use -d to run in that distro, otherwise run in default distro
 
-                        var result = await ProcessHelper.RunProcess("wsl", args);
+                        var result = await ProcessHelper.RunProcess("wsl", args, timeout: _options.CondaWhichTimeout);
 
                         // ensure the output is not the welcome message, and if so, try again after a delay for up to 2 times
                         for (int attempt = 0; attempt < 2; attempt++)
@@ -359,7 +370,7 @@ namespace DotNetPythonBridge
                                 {
                                     Log.Logger.LogWarning($"Received WSL welcome message instead of conda/mamba path. Retrying...");
                                     await Task.Delay(1000); // wait for 1 second before retrying
-                                    result = await ProcessHelper.RunProcess("wsl", args);
+                                    result = await ProcessHelper.RunProcess("wsl", args, timeout: _options.CondaWhichTimeout);
                                 }
                                 else
                                 {
@@ -435,7 +446,7 @@ namespace DotNetPythonBridge
                 return PythonEnvironments.Environments;
             }
 
-            var result = await ProcessHelper.RunProcess(await GetCondaOrMambaPath(), new[] { "info", "--json" }); //%
+            var result = await ProcessHelper.RunProcess(await GetCondaOrMambaPath(), new[] { "info", "--json" }, timeout: _options.CondaListEnvironmentsTimeout);
 
             if (result.ExitCode != 0)
             {
@@ -503,7 +514,8 @@ namespace DotNetPythonBridge
             if (wslDistro != null) // A specific distro is provided
             {
                 string buildBashCondaCommand = BashCommandBuilder.BuildBashCondaCommand(await GetCondaOrMambaPathWSL(wslDistro), "info --json"); //%
-                var result = await ProcessHelper.RunProcess("wsl", new[] { "-d", wslDistro.Name, "bash", "-lic", buildBashCondaCommand });
+                var result = await ProcessHelper.RunProcess("wsl", new[] { "-d", wslDistro.Name, "bash", "-lic", buildBashCondaCommand }, 
+                    timeout: _options.CondaListEnvironmentsTimeout);
 
                 //string escapedCondaPath = FilenameHelper.BashEscape(await GetCondaOrMambaPathWSL(wslDistro)); // escape any special chars in the conda path for bash
                 //string bashCommand = $"bash -lic \"{escapedCondaPath} info --json\""; // use bash -lic to properly source the environment in WSL
@@ -668,11 +680,13 @@ namespace DotNetPythonBridge
 
             if (string.IsNullOrEmpty(envName)) // use env name from YAML
             {
-                result = await ProcessHelper.RunProcess(await GetCondaOrMambaPath(), $"env create -f {yamlFilepathQuoted}"); //&
+                result = await ProcessHelper.RunProcess(await GetCondaOrMambaPath(), $"env create -f {yamlFilepathQuoted}",
+                    timeout: _options.CondaCreateEnvironmentTimeout); //&
             }
             else // use specified env name to override name in YAML
             {
-                result = await ProcessHelper.RunProcess(await GetCondaOrMambaPath(), $"env create -n {envName} -f {yamlFilepathQuoted}"); //&
+                result = await ProcessHelper.RunProcess(await GetCondaOrMambaPath(), $"env create -n {envName} -f {yamlFilepathQuoted}",
+                    timeout: _options.CondaCreateEnvironmentTimeout); //&
             }
 
             if (result.ExitCode != 0)
@@ -708,7 +722,7 @@ namespace DotNetPythonBridge
                     //string bashCommand = $"bash -lic \"{escapedCondaPath} env create -f {escapedYamlFile}\"";
                     //result = await ProcessHelper.RunProcess("wsl", $"-d {wslDistro.Name} {bashCommand}");
                     string bashCommand = BashCommandBuilder.BuildBashCreateCondaEnvCmd(await GetCondaOrMambaPathWSL(wslDistro), yamlFile, null);
-                    result = await ProcessHelper.RunProcess("wsl", new[] { "-d", wslDistro.Name, "bash", "-lic", bashCommand });
+                    result = await ProcessHelper.RunProcess("wsl", new[] { "-d", wslDistro.Name, "bash", "-lic", bashCommand }, timeout: _options.CondaCreateEnvironmentTimeout);
                 }
                 else // use specified env name to override name in YAML
                 {
@@ -717,7 +731,7 @@ namespace DotNetPythonBridge
                     // Use bash -lic to properly source the environment in WSL, and wrap yamlFile in single quotes to avoid issues with special chars
                     //result = await ProcessHelper.RunProcess("wsl", $"-d {wslDistro.Name} {bashCommand}");
                     string bashCommand = BashCommandBuilder.BuildBashCreateCondaEnvCmd(await GetCondaOrMambaPathWSL(wslDistro), yamlFile, envName);
-                    result = await ProcessHelper.RunProcess("wsl", new[] { "-d", wslDistro.Name, "bash", "-lic", bashCommand });
+                    result = await ProcessHelper.RunProcess("wsl", new[] { "-d", wslDistro.Name, "bash", "-lic", bashCommand }, timeout: _options.CondaCreateEnvironmentTimeout);
                 }
 
                 if (result.ExitCode != 0)
@@ -756,7 +770,7 @@ namespace DotNetPythonBridge
         {
             Log.Logger.LogInformation(envName != null ? $"Deleting conda environment '{envName}'" : "Deleting base conda environment...");
 
-            var result = await ProcessHelper.RunProcess(await GetCondaOrMambaPath(), $"env remove -n {envName} --yes"); //&
+            var result = await ProcessHelper.RunProcess(await GetCondaOrMambaPath(), $"env remove -n {envName} --yes", timeout: _options.CondaDeleteEnvironmentTimeout);
 
             if (result.ExitCode != 0)
             {
@@ -779,7 +793,7 @@ namespace DotNetPythonBridge
 
                 // Use bash -lic to properly source the environment in WSL
                 //var result = await ProcessHelper.RunProcess("wsl", $"-d {wslDistro.Name} bash -lic {bashCommand}");
-                var result = await ProcessHelper.RunProcess("wsl", new[] { "-d", wslDistro.Name, "bash", "-lic", bashCommand });
+                var result = await ProcessHelper.RunProcess("wsl", new[] { "-d", wslDistro.Name, "bash", "-lic", bashCommand }, timeout: _options.CondaDeleteEnvironmentTimeout);
 
                 if (result.ExitCode != 0)
                 {
@@ -862,6 +876,23 @@ namespace DotNetPythonBridge
             lock (_initLock)
             {
                 PythonEnvironmentsWSL = envs;
+            }
+        }
+
+        // Thread-safe update of _options
+        private static void updateOptions(DotNetPythonBridgeOptions? options)
+        {
+            lock (_initLock)
+            {
+                _options = options;
+            }
+        }
+
+        private static void updateWSL_DistrDoesFileExistTimeout(TimeSpan timeout)
+        {
+            lock (_initLock)
+            {
+                wsl_DistroDoesFileExistTimeout = timeout;
             }
         }
     }

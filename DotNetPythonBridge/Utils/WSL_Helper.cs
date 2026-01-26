@@ -10,6 +10,7 @@ namespace DotNetPythonBridge.Utils
     public static class WSL_Helper
     {
         private static WSL_Distros? Distros = null;
+        private static readonly DotNetPythonBridgeOptions options = new DotNetPythonBridgeOptions();
 
         /// <summary>
         /// Get a list of all installed WSL distributions on the local machine.
@@ -17,8 +18,11 @@ namespace DotNetPythonBridge.Utils
         /// <returns></returns>
         /// <exception cref="PlatformNotSupportedException"></exception>
         /// <exception cref="Exception"></exception>
-        public static async Task<WSL_Distros> GetWSLDistros(bool refresh = false)
+        public static async Task<WSL_Distros> GetWSLDistros(bool refresh = false, TimeSpan? listDistrosTimeout = null, TimeSpan? wslWarmupTimeout = null)
         {
+            listDistrosTimeout ??= options.WSL_ListDistrosTimeout; // use timeout from options if not provided
+            wslWarmupTimeout ??= options.WSL_WarmupTimeout; // use timeout from options if not provided
+
             // Return cached distros if already retrieved and refresh is not requested
             if (Distros != null && !refresh)
                 return Distros;
@@ -34,8 +38,9 @@ namespace DotNetPythonBridge.Utils
 
             try
             {
-                CancellationToken cancellationToken = new CancellationToken();
-                var result = await ProcessHelper.RunProcess("wsl", "-l -v", cancellationToken, null, Encoding.Unicode); //& use Unicode encoding to handle possible non-ASCII characters
+                //CancellationToken cancellationToken = new CancellationToken();
+                //var result = await ProcessHelper.RunProcess("wsl", "-l -v", cancellationToken, null, Encoding.Unicode); //& use Unicode encoding to handle possible non-ASCII characters
+                var result = await ProcessHelper.RunProcess("wsl", "-l -v", timeout: listDistrosTimeout, encoding: Encoding.Unicode); //& use Unicode encoding to handle possible non-ASCII characters
                 if (result.ExitCode == 0 && !string.IsNullOrWhiteSpace(result.Output))
                 {
                     //store the distris in WSL_Distro object
@@ -53,7 +58,7 @@ namespace DotNetPythonBridge.Utils
                             string name = parts[1];
                             distros.Distros.Add(new WSL_Distro(name, isDefault));
                             // warm up the distro
-                            await WarmupWSL_Distro(name);
+                            await WarmupWSL_Distro(name, wslWarmupTimeout);
                             Log.Logger.LogInformation($"Found WSL Distro: {name}, Default: {isDefault}");
                         }
                         else if (parts.Length == 3) // handle case for non-default distro without the "*"
@@ -62,7 +67,7 @@ namespace DotNetPythonBridge.Utils
                             string name = parts[0];
                             distros.Distros.Add(new WSL_Distro(name, isDefault));
                             // warm up the distro
-                            await WarmupWSL_Distro(name);
+                            await WarmupWSL_Distro(name, wslWarmupTimeout);
                             Log.Logger.LogInformation($"Found WSL Distro: {name}, Default: {isDefault}");
                         } 
                     }
@@ -118,12 +123,14 @@ namespace DotNetPythonBridge.Utils
         /// <param name="wslDistro"></param>
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
-       public static async Task<PythonResult> WarmupWSL_Distro(WSL_Helper.WSL_Distro wslDistro)
+       public static async Task<PythonResult> WarmupWSL_Distro(WSL_Helper.WSL_Distro wslDistro, TimeSpan? wslWarmupTimeout = null)
         {
+            wslWarmupTimeout ??= options.WSL_WarmupTimeout; // use timeout from options if not provided
+
             for (int i = 0; i < 3; i++)
             {
                 //string escapedDistroName = FilenameHelper.BashEscape(wslDistro.Name);
-                var result = await ProcessHelper.RunProcess("wsl", $"-d {wslDistro.Name} echo WSL Distro Warmed Up"); //&
+                var result = await ProcessHelper.RunProcess("wsl", $"-d {wslDistro.Name} echo WSL Distro Warmed Up", timeout: wslWarmupTimeout);
                 //var result = await ProcessHelper.RunProcess("wsl", $"-d {escapedDistroName} echo WSL Distro Warmed Up");
 
                 if (result.ExitCode == 0)
@@ -150,10 +157,12 @@ namespace DotNetPythonBridge.Utils
         /// </summary>
         /// <param name="wslDistroName"></param>
         /// <returns></returns>
-        public static async Task<PythonResult> WarmupWSL_Distro(string wslDistroName)
+        public static async Task<PythonResult> WarmupWSL_Distro(string wslDistroName, TimeSpan? wslWarmupTimeout = null)
         {
+            wslWarmupTimeout ??= options.WSL_WarmupTimeout; // use timeout from options if not provided
+
             var wslDistro = new WSL_Helper.WSL_Distro(wslDistroName, false);
-            return await WarmupWSL_Distro(wslDistro);
+            return await WarmupWSL_Distro(wslDistro, wslWarmupTimeout);
         }
 
         public async static Task<WSL_Distro> getDefaultWSL_Distro()
