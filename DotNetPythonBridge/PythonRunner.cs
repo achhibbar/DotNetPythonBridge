@@ -12,7 +12,7 @@ namespace DotNetPythonBridge
         /// Run a Python script inside the given environment.
         /// If wSL_Distro is provided, runs inside the specified WSL distribution.
         /// </summary>
-        public static async Task<PythonResult> RunScript(string scriptPath, PythonEnvironment? env = null, string[] arguments = null, 
+        public static async Task<PythonResult> RunScript(string scriptPath, PythonEnvironment? env = null, string[]? arguments = null, 
             CancellationToken cancellationToken = default, TimeSpan? timeout = null)
         {
             // Log the execution details, handle null env
@@ -53,7 +53,7 @@ namespace DotNetPythonBridge
         /// Run a Python script inside the given environment.
         /// If wSL_Distro is provided, runs inside the specified WSL distribution.
         /// </summary>
-        public static async Task<PythonResult> RunScriptWSL(string scriptPath, PythonEnvironment? env = null, WSL_Helper.WSL_Distro? wSL_Distro = null, string[] arguments = null,
+        public static async Task<PythonResult> RunScriptWSL(string scriptPath, PythonEnvironment? env = null, WSL_Helper.WSL_Distro? wSL_Distro = null, string[]? arguments = null,
             CancellationToken cancellationToken = default, TimeSpan? timeout = null)
         {
             Log.Logger.LogInformation($"Running script: {scriptPath} with arguments: {arguments} in environment: {(env != null ? env.Name : "Base")}, WSL: {(wSL_Distro != null ? wSL_Distro.Name : "Default")}");
