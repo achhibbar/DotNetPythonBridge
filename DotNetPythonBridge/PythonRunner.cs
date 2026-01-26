@@ -12,7 +12,8 @@ namespace DotNetPythonBridge
         /// Run a Python script inside the given environment.
         /// If wSL_Distro is provided, runs inside the specified WSL distribution.
         /// </summary>
-        public static async Task<PythonResult> RunScript(string scriptPath, PythonEnvironment? env = null, string[] arguments = null)
+        public static async Task<PythonResult> RunScript(string scriptPath, PythonEnvironment? env = null, string[] arguments = null, 
+            CancellationToken cancellationToken = default, TimeSpan? timeout = null)
         {
             // Log the execution details, handle null env
             Log.Logger.LogInformation($"Running script: {scriptPath} with arguments: {arguments} in environment: {(env != null ? env.Name : "Base")}");
@@ -37,7 +38,7 @@ namespace DotNetPythonBridge
             }
             string argumentsEscaped = string.Join(" ", argsList);
 
-            var result = await ProcessHelper.RunProcess(pythonExe, $"{escapedScriptPath} {argumentsEscaped}"); //&
+            var result = await ProcessHelper.RunProcess(pythonExe, $"{escapedScriptPath} {argumentsEscaped}", cancellationToken, timeout);
             //var result = await ProcessHelper.RunProcess(pythonExe, $"{escapedScriptPath} {arguments}");
             if (result.ExitCode != 0)
             {
@@ -52,7 +53,8 @@ namespace DotNetPythonBridge
         /// Run a Python script inside the given environment.
         /// If wSL_Distro is provided, runs inside the specified WSL distribution.
         /// </summary>
-        public static async Task<PythonResult> RunScriptWSL(string scriptPath, PythonEnvironment? env = null, WSL_Helper.WSL_Distro? wSL_Distro = null, string[] arguments = null)
+        public static async Task<PythonResult> RunScriptWSL(string scriptPath, PythonEnvironment? env = null, WSL_Helper.WSL_Distro? wSL_Distro = null, string[] arguments = null,
+            CancellationToken cancellationToken = default, TimeSpan? timeout = null)
         {
             Log.Logger.LogInformation($"Running script: {scriptPath} with arguments: {arguments} in environment: {(env != null ? env.Name : "Base")}, WSL: {(wSL_Distro != null ? wSL_Distro.Name : "Default")}");
 
@@ -91,7 +93,8 @@ namespace DotNetPythonBridge
             {
                 "-d", wSL_Distro.Name,
                 "bash", "-lic", bashCommand
-            });
+            },
+            cancellationToken, timeout);
             //var result = await ProcessHelper.RunProcess("wsl", $"-d {wSL_Distro.Name} bash -lic \"{bashCommand}\"");
             //var result = await ProcessHelper.RunProcess(
             //    "wsl", $"-d {wSL_Distro.Name} bash -lic \"{pythonExe} \\\"{FilenameHelper.convertWindowsPathToWSL(scriptPath)}\\\" {arguments}\"");
@@ -108,7 +111,7 @@ namespace DotNetPythonBridge
         /// <summary>
         /// Run inline Python code inside the given environment.
         /// </summary>
-        public static async Task<PythonResult> RunCode(string code, PythonEnvironment? env = null)
+        public static async Task<PythonResult> RunCode(string code, PythonEnvironment? env = null, CancellationToken cancellationToken = default, TimeSpan? timeout = null)
         {
             // Log the execution details, handle null env
             Log.Logger.LogInformation($"Running inline code in environment: {(env != null ? env.Name : "Base")}");
@@ -118,7 +121,7 @@ namespace DotNetPythonBridge
             // Escape quotes to avoid breaking shell
             string escapedCode = BashCommandBuilder.EscapeQuotes(code);
 
-            var result = await ProcessHelper.RunProcess(pythonExe, new[] { "-c", escapedCode });
+            var result = await ProcessHelper.RunProcess(pythonExe, new[] { "-c", escapedCode }, cancellationToken, timeout);
             //var result = await ProcessHelper.RunProcess(pythonExe, $"-c \"{escapedCode}\"");
             if (result.ExitCode != 0)
             {
@@ -132,7 +135,8 @@ namespace DotNetPythonBridge
         /// <summary>
         /// Run inline Python code inside the given environment.
         /// </summary>
-        public static async Task<PythonResult> RunCodeWSL(string code, PythonEnvironment? env = null, WSL_Helper.WSL_Distro? wSL_Distro = null)
+        public static async Task<PythonResult> RunCodeWSL(string code, PythonEnvironment? env = null, WSL_Helper.WSL_Distro? wSL_Distro = null,
+            CancellationToken cancellationToken = default, TimeSpan? timeout = null)
         {
             Log.Logger.LogInformation($"Running inline code in environment: {(env != null ? env.Name : "Base")}, WSL: {(wSL_Distro != null ? wSL_Distro.Name : "Base")}");
 
@@ -155,7 +159,8 @@ namespace DotNetPythonBridge
             {
                 "-d", wSL_Distro.Name,
                 "bash", "-lic", bashCommand
-            });
+            },
+            cancellationToken, timeout);
             //var result = await ProcessHelper.RunProcess("wsl", $"-d {wSL_Distro.Name} bash -lic \"{bashCommand}\"");
             //var result = await ProcessHelper.RunProcess("wsl", $"-d {wSL_Distro.Name} bash -lic \"{pythonExe} -c \\\"{escapedCode}\\\"\"");
 

@@ -54,6 +54,7 @@ namespace DotNetPythonBridge
         public PythonServiceOptions WithPort(int port) { DefaultPort = port; return this; }
         public PythonServiceOptions WithServiceArgs(string args) { DefaultServiceArgs = args; return this; }
         public PythonServiceOptions EnableHealthCheck(bool enabled = true) { HealthCheckEnabled = enabled; return this; }
+        public PythonServiceOptions WithServiceRetryCount(int count) { ServiceRetryCount = count; return this; }
         public PythonServiceOptions WithHealthCheckTimeout(int seconds) { HealthCheckTimeoutSeconds = seconds; return this; }
         public PythonServiceOptions WithForceKillTimeout(int milliseconds) { ForceKillTimeoutMilliseconds = milliseconds; return this; }
         public PythonServiceOptions WithStopTimeout(int milliseconds) { StopTimeoutMilliseconds = milliseconds; return this; }

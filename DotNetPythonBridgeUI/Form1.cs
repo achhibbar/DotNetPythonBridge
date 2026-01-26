@@ -476,6 +476,10 @@ namespace DotNetPythonBridgeUI
                 CondaManager.Reset(); // reset the CondaManager to uninitialized state
             }
 
+            CancellationTokenSource cts = new CancellationTokenSource(100000); // cancel after 100 seconds
+            CancellationToken token = cts.Token;
+            TimeSpan timeout = TimeSpan.FromSeconds(300); // set a timeout of 300 seconds
+
             if (!checkBoxWSL.Checked) // run in windows
             {
 
@@ -485,7 +489,8 @@ namespace DotNetPythonBridgeUI
                 rtbPythonBridge.Text += "Starting Python Service in Windows..." + Environment.NewLine;
                 string serviceFilePath = @"F:\Ash docs\BTBP\c#\Ash projects\DotNetPythonBridgeUI\TestService.py";
                 var env = await CondaManager.GetEnvironment("SimpleITK_OpenCV_env");
-                var winPyService = await PythonService.Start(serviceFilePath, env); // no env provided, will use lazy init by using the base conda env
+                // no env provided, will use lazy init by using the base conda env
+                var winPyService = await PythonService.Start(serviceFilePath, env, cancellationToken: token, timeout: timeout);
                 rtbPythonBridge.Text += $"Python Service started in Windows on port {winPyService.Port}" + Environment.NewLine;
                 rtbPythonBridge.Text += Environment.NewLine;
 
@@ -505,7 +510,8 @@ namespace DotNetPythonBridgeUI
                 string serviceFilePath = @"F:\Ash docs\BTBP\c#\Ash projects\DotNetPythonBridgeUI\TestService.py";
                 rtbPythonBridge.Text += "Starting Python Service in WSL..." + Environment.NewLine;
                 var env = await CondaManager.GetEnvironmentWSL("SimpleITK_OpenCV_env");
-                wslPyService = await PythonService.StartWSL(serviceFilePath, env);
+                // no env or distro provided, will use lazy init by using the base conda env in default wsl distro
+                wslPyService = await PythonService.StartWSL(serviceFilePath, env, cancellationToken: token, timeout: timeout); 
                 rtbPythonBridge.Text += $"Python Service started in WSL on port {wslPyService.Port}" + Environment.NewLine;
                 rtbPythonBridge.Text += Environment.NewLine;
 
@@ -528,13 +534,19 @@ namespace DotNetPythonBridgeUI
                 CondaManager.Reset(); // reset the CondaManager to uninitialized state
             }
 
+            // create a shared cancellation token source that can be used for all runs and has a timeout of 10 seconds
+            CancellationTokenSource cts = new CancellationTokenSource(10000); // cancel after 10 seconds
+            CancellationToken token = cts.Token;
+            TimeSpan timeout = TimeSpan.FromSeconds(30); // set a timeout of 30 seconds
+
             if (!checkBoxWSL.Checked) // run in windows
             {
                 //lazy run a python script in windows
                 string scriptPath = @"F:\Ash docs\BTBP\c#\Ash projects\DotNetPythonBridgeUI\TestScript2.py";
                 //string arguments = "Ash Nira"; //add any arguments if needed
                 string[] arguments = new string[] { "Ash", "Nira" };
-                var pyResult = await PythonRunner.RunScript(scriptPath, arguments: arguments); // no env provided, will use lazy init by using the base conda env
+                // run script with cancellation token and timeout
+                var pyResult = await PythonRunner.RunScript(scriptPath, arguments: arguments, cancellationToken: token, timeout: timeout); // no env provided, will use lazy init by using the base conda env
                 rtbPythonBridge.Text += "Running Python Script in Windows:" + Environment.NewLine;
                 rtbPythonBridge.Text += pyResult.Output + Environment.NewLine;
                 rtbPythonBridge.Text += pyResult.Error + Environment.NewLine;
@@ -543,7 +555,7 @@ namespace DotNetPythonBridgeUI
                 //run inline python code in windows
                 //inline python code for a simple math operation that returns a result
                 string inlineCode = "result = 0\nfor i in range(5):\n    result += i\nprint(f'Sum of first 5 numbers is: {result}')";
-                pyResult = await PythonRunner.RunCode(inlineCode); // no env provided, will use lazy init by using the base conda env
+                pyResult = await PythonRunner.RunCode(code: inlineCode, cancellationToken: token, timeout: timeout);  // no env provided, will use lazy init by using the base conda env
                 rtbPythonBridge.Text += "Running Inline Python Code in Windows:" + Environment.NewLine;
                 rtbPythonBridge.Text += pyResult.Output + Environment.NewLine;
                 rtbPythonBridge.Text += pyResult.Error + Environment.NewLine;
@@ -556,7 +568,7 @@ namespace DotNetPythonBridgeUI
                 var arguments = new string[] { "Ash", "Nira" };
                 string scriptPath = @"F:\Ash docs\BTBP\c#\Ash projects\DotNetPythonBridgeUI\TestScript2.py";
                 // no env or distro provided, will use lazy init by using the base conda env in default wsl distro
-                var pyResult = await PythonRunner.RunScriptWSL(scriptPath, arguments: arguments);
+                var pyResult = await PythonRunner.RunScriptWSL(scriptPath, arguments: arguments, cancellationToken: token, timeout: timeout);
                 rtbPythonBridge.Text += "Running Python Script in WSL:" + Environment.NewLine;
                 rtbPythonBridge.Text += pyResult.Output + Environment.NewLine;
                 rtbPythonBridge.Text += pyResult.Error + Environment.NewLine;
@@ -565,7 +577,7 @@ namespace DotNetPythonBridgeUI
 
                 // run inline python code in wsl using the env
                 string inlineCode = "result = 0\nfor i in range(5):\n    result += i\nprint(f'Sum of first 5 numbers is: {result}')";
-                pyResult = await PythonRunner.RunCodeWSL(inlineCode);
+                pyResult = await PythonRunner.RunCodeWSL(inlineCode, cancellationToken: token, timeout: timeout); // no env or distro provided, will use lazy init by using the base conda env in default wsl distro
                 rtbPythonBridge.Text += "Running Inline Python Code in WSL:" + Environment.NewLine;
                 rtbPythonBridge.Text += pyResult.Output + Environment.NewLine;
                 rtbPythonBridge.Text += pyResult.Error + Environment.NewLine;

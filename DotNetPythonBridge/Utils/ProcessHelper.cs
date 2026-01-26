@@ -69,6 +69,7 @@ namespace DotNetPythonBridge.Utils
             string file,
             IEnumerable<string> arguments,
             CancellationToken cancellationToken = default,
+            TimeSpan? timeout = null,
             Encoding? encoding = null) // Changed to nullable
         {
             // All calls to this overload use UTF-8
@@ -88,7 +89,7 @@ namespace DotNetPythonBridge.Utils
             foreach (var arg in arguments)
                 psi.ArgumentList.Add(arg);
 
-            return RunProcessInternal(psi, cancellationToken);
+            return RunProcessInternal(psi, cancellationToken, timeout);
         }
 
         /// <summary>
@@ -102,6 +103,7 @@ namespace DotNetPythonBridge.Utils
             string file,
             string args,
             CancellationToken cancellationToken = default,
+            TimeSpan? timeout = null,
             Encoding? encoding = null) // Changed to nullable
         {
             // The only time encoding is null is when called from WSL_Helper.GetWSLDistros
@@ -121,7 +123,7 @@ namespace DotNetPythonBridge.Utils
                 //StandardOutputEncoding = GetEncodingForProcess(file, args)
             };
 
-            return RunProcessInternal(psi, cancellationToken);
+            return RunProcessInternal(psi, cancellationToken, timeout);
         }
 
         /// <summary>
@@ -133,30 +135,46 @@ namespace DotNetPythonBridge.Utils
         /// <exception cref="Exception"></exception>
         private static async Task<PythonResult> RunProcessInternal(
             ProcessStartInfo psi,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken,
+            TimeSpan? timeout = null)
         {
             Log.Logger.LogDebug($"Running process: {psi.FileName} {psi.Arguments}");
 
             using var proc = Process.Start(psi)
                 ?? throw new Exception("Failed to start process.");
 
-            // Kick off parallel reading of output/error
             Task<string> outputTask = proc.StandardOutput.ReadToEndAsync();
             Task<string> errorTask = proc.StandardError.ReadToEndAsync();
 
-            try
-            {
-                // Wait for process to exit (supports cancellation)
-                await proc.WaitForExitAsync(cancellationToken);
-            }
-            catch (OperationCanceledException)
-            {
-                try { proc.Kill(entireProcessTree: true); } catch { }
+            CancellationTokenSource? timeoutCts = null;
+            CancellationToken linkedToken = cancellationToken;
 
-                throw;
+            if (timeout.HasValue) // if a timeout is specified then link it with the cancellation token
+            {
+                timeoutCts = new CancellationTokenSource(timeout.Value);
+                linkedToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token).Token;
             }
 
-            // Ensure all output is read
+            using (linkedToken.Register(() =>
+            {
+                if (!proc.HasExited)
+                {
+                    try { proc.Kill(entireProcessTree: true); } catch { }
+                }
+            }))
+            {
+                try
+                {
+                    await proc.WaitForExitAsync(linkedToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    if (timeoutCts != null && timeoutCts.IsCancellationRequested)
+                        throw new TimeoutException("The process has timed out.");
+                    throw;
+                }
+            }
+
             await Task.WhenAll(outputTask, errorTask);
 
             var result = new PythonResult(
@@ -182,6 +200,7 @@ namespace DotNetPythonBridge.Utils
             string file,
             IEnumerable<string> arguments,
             CancellationToken cancellationToken = default,
+            TimeSpan? timeout = null,
             Action<string>? onOutput = null,
             Action<string>? onError = null,
             Encoding? encoding = null)
@@ -202,7 +221,7 @@ namespace DotNetPythonBridge.Utils
             foreach (var arg in arguments)
                 psi.ArgumentList.Add(arg);
 
-            return StartProcessInternal(psi, cancellationToken, onOutput, onError);
+            return StartProcessInternal(psi, cancellationToken, onOutput, onError, timeout);
         }
 
         /// <summary>
@@ -211,6 +230,7 @@ namespace DotNetPythonBridge.Utils
             string file,
             string args,
             CancellationToken cancellationToken = default,
+            TimeSpan? timeout = null,
             Action<string>? onOutput = null,
             Action<string>? onError = null,
             Encoding? encoding = null)
@@ -231,7 +251,8 @@ namespace DotNetPythonBridge.Utils
                 },
                 cancellationToken,
                 onOutput,
-                onError
+                onError,
+                timeout
             );
         }
 
@@ -242,13 +263,15 @@ namespace DotNetPythonBridge.Utils
         /// <param name="cancellationToken"></param>
         /// <param name="onOutput"></param>
         /// <param name="onError"></param>
+        /// <param name="timeout"></param>
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
         private static Task<Process> StartProcessInternal(
             ProcessStartInfo psi,
             CancellationToken cancellationToken,
             Action<string>? onOutput,
-            Action<string>? onError)
+            Action<string>? onError,
+            TimeSpan? timeout = null)
         {
             var proc = Process.Start(psi)!;
 
@@ -276,21 +299,30 @@ namespace DotNetPythonBridge.Utils
             proc.BeginOutputReadLine();
             proc.BeginErrorReadLine();
 
-            if (cancellationToken.CanBeCanceled)
+            // Register cancellation to kill the process
+            CancellationTokenSource? timeoutCts = null;
+            CancellationToken linkedToken = cancellationToken;
+
+            if (timeout.HasValue) // if a timeout is specified then link it with the cancellation token
             {
-                cancellationToken.Register(() =>
-                {
-                    if (!proc.HasExited)
-                    {
-                        Log.Logger.LogInformation("Cancellation requested. Killing process.");
-                        try { proc.Kill(entireProcessTree: true); }
-                        catch { }
-                    }
-                });
+                timeoutCts = new CancellationTokenSource(timeout.Value);
+                linkedToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token).Token;
             }
 
+            linkedToken.Register(() =>
+            {
+                if (!proc.HasExited)
+                {
+                    Log.Logger.LogInformation("Cancellation or timeout requested. Killing process.");
+                    try { proc.Kill(entireProcessTree: true); }
+                    catch { }
+                }
+            });
+
+            // Return immediately; do not await process exit
             return Task.FromResult(proc);
         }
+
 
     }
 }

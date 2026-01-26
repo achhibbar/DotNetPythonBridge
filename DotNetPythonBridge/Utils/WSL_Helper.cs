@@ -35,7 +35,7 @@ namespace DotNetPythonBridge.Utils
             try
             {
                 CancellationToken cancellationToken = new CancellationToken();
-                var result = await ProcessHelper.RunProcess("wsl", "-l -v", cancellationToken, Encoding.Unicode); //& use Unicode encoding to handle possible non-ASCII characters
+                var result = await ProcessHelper.RunProcess("wsl", "-l -v", cancellationToken, null, Encoding.Unicode); //& use Unicode encoding to handle possible non-ASCII characters
                 if (result.ExitCode == 0 && !string.IsNullOrWhiteSpace(result.Output))
                 {
                     //store the distris in WSL_Distro object

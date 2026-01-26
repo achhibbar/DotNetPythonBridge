@@ -28,7 +28,8 @@ namespace DotNetPythonBridge
         /// <summary>
         /// Start a long-running Python service inside the given conda environment.
         /// </summary>
-        public static async Task<PythonService> Start(string scriptPath, PythonEnvironment? env = null, PythonServiceOptions? options = null)
+        public static async Task<PythonService> Start(string scriptPath, PythonEnvironment? env = null, PythonServiceOptions? options = null,
+            CancellationToken cancellationToken = default, TimeSpan? timeout = null)
         {
             Log.Logger.LogInformation($"Starting Python service using environment: {(env != null ? env.Name : "Base")}, script: {scriptPath}");
 
@@ -58,7 +59,8 @@ namespace DotNetPythonBridge
                 // give up the port reservation
                 portReservation.Release();
 
-                var proc = await ProcessHelper.StartProcess(pythonExe, args); // start the process using ArgumentList to avoid issues with spaces
+                // start the process using ArgumentList to avoid issues with spaces
+                var proc = await ProcessHelper.StartProcess(pythonExe, args, cancellationToken: cancellationToken, timeout: timeout);
 
                 var service = new PythonService(proc, port); // create service instance
 
@@ -90,7 +92,9 @@ namespace DotNetPythonBridge
             string scriptPath,
             PythonEnvironment? env = null,
             PythonServiceOptions? options = null,
-            WSL_Helper.WSL_Distro? wsl = null)
+            WSL_Helper.WSL_Distro? wsl = null,
+            CancellationToken cancellationToken = default,
+            TimeSpan? timeout = null)
         {
             Log.Logger.LogInformation(
                 $"Starting Python service using env: {env?.Name ?? "Base"}, script: {scriptPath}, WSL: {wsl?.Name ?? "None"}");
@@ -124,7 +128,8 @@ namespace DotNetPythonBridge
                 portReservation.Release();
 
                 // Start process via WSL using ArgumentList
-                var proc = await ProcessHelper.StartProcess("wsl", new[] { "-d", wsl.Name, "bash", "-lc", bashCommand }); // already safely escaped
+                var proc = await ProcessHelper.StartProcess("wsl", new[] { "-d", wsl.Name, "bash", "-lc", bashCommand },
+                    cancellationToken: cancellationToken, timeout: timeout);
 
                 var service = new PythonService(proc, port, wsl);
 
