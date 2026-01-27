@@ -22,21 +22,31 @@ namespace DotNetPythonBridge.Utils
 
         internal static string convertWindowsPathToWSL(string windowsPath)
         {
-            // check if there is an error in the path
-            if (string.IsNullOrEmpty(windowsPath) || windowsPath.Length < 2)
+            // Check if the path is null or empty
+            if (string.IsNullOrEmpty(windowsPath) || windowsPath.Length < 3)
             {
                 Log.Logger.LogError("Invalid Windows path.");
                 throw new ArgumentException("Invalid Windows path.");
             }
 
-            //check if the the path is already in WSL format
+            // Check if the path is already in WSL format
             if (windowsPath.StartsWith("/mnt/") || windowsPath.StartsWith("/"))
+            {
+                Log.Logger.LogInformation($"Path is already in WSL format: '{windowsPath}'");
                 return windowsPath;
+            }
 
-            char driveLetter = char.ToLower(windowsPath[0]);
+            // Validate the drive letter
+            char driveLetter = windowsPath[0];
+            if (!char.IsLetter(driveLetter) || windowsPath[1] != ':')
+            {
+                Log.Logger.LogError("Invalid drive letter in Windows path.");
+                throw new ArgumentException("Invalid drive letter in Windows path.");
+            }
+
             string pathWithoutDrive = windowsPath.Substring(2).Replace('\\', '/');
-            Log.Logger.LogInformation($"Converted Windows path '{windowsPath}' to WSL path '/mnt/{driveLetter}{pathWithoutDrive}'");
-            return $"/mnt/{driveLetter}{pathWithoutDrive}";
+            Log.Logger.LogInformation($"Converted Windows path '{windowsPath}' to WSL path '/mnt/{char.ToLower(driveLetter)}{pathWithoutDrive}'");
+            return $"/mnt/{char.ToLower(driveLetter)}{pathWithoutDrive}";
         }
 
         internal static string convertDistroCondaPathToWindows(string WSL_DistroName, string WSL_condaPath)
@@ -50,9 +60,19 @@ namespace DotNetPythonBridge.Utils
                 throw new ArgumentException("Invalid WSL distro name or conda path.");
             }
 
-            //check if the the path is already in Windows format
+            // Check if the path is already in Windows format
             if (WSL_condaPath.StartsWith("\\\\wsl$\\"))
+            {
+                Log.Logger.LogInformation($"Path is already in Windows format: '{WSL_condaPath}'");
                 return WSL_condaPath;
+            }
+
+            // Validate that the WSL conda path starts with a valid prefix
+            if (!WSL_condaPath.StartsWith("/home/"))
+            {
+                Log.Logger.LogError("WSL conda path must start with '/home/'.");
+                throw new ArgumentException("Invalid WSL conda path.");
+            }
 
             string windowsPath = $"\\\\wsl$\\{WSL_DistroName}{WSL_condaPath.Replace('/', '\\')}";
             Log.Logger.LogInformation($"Converted WSL conda path '{WSL_condaPath}' in distro '{WSL_DistroName}' to Windows path '{windowsPath}'");
