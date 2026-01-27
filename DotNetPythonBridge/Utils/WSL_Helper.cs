@@ -83,7 +83,7 @@ namespace DotNetPythonBridge.Utils
             }
 
             Log.Logger.LogError("No WSL distributions found. Please install a WSL distribution.");
-            throw new Exception("No WSL distributions found. Please install a WSL distribution.");
+            throw new InvalidOperationException("No WSL distributions found. Please install a WSL distribution.");
         }
 
         // an object to hold a WSL distro name and if it's default
@@ -148,7 +148,7 @@ namespace DotNetPythonBridge.Utils
             }
 
             Log.Logger.LogError($"Failed to warm up WSL Distro {wslDistro.Name} after multiple attempts.");
-            throw new Exception($"Failed to warm up WSL Distro {wslDistro.Name}.");
+            throw new InvalidOperationException($"Failed to warm up WSL Distro {wslDistro.Name}.");
         }
 
         /// <summary>
@@ -178,7 +178,7 @@ namespace DotNetPythonBridge.Utils
                 if (CondaManager.WSL != null)
                     return CondaManager.WSL;
                 else
-                    throw new Exception("No WSL distribution specified and no default WSL distribution found in CondaManager.");
+                    throw new InvalidOperationException("No WSL distribution specified and no default WSL distribution found in CondaManager.");
             }
 
         }

@@ -12,8 +12,8 @@ namespace DotNetPythonBridge
         /// Run a Python script inside the given environment.
         /// If wSL_Distro is provided, runs inside the specified WSL distribution.
         /// </summary>
-        public static async Task<PythonResult> RunScript(string scriptPath, PythonEnvironment? env = null, string[]? arguments = null, 
-            CancellationToken cancellationToken = default, TimeSpan? timeout = null)
+        public static async Task<PythonResult> RunScript(string scriptPath, PythonEnvironment? env = null, string[]? arguments = null,
+    CancellationToken cancellationToken = default, TimeSpan? timeout = null)
         {
             // Log the execution details, handle null env
             Log.Logger.LogInformation($"Running script: {scriptPath} with arguments: {arguments} in environment: {(env != null ? env.Name : "Base")}");
@@ -43,7 +43,7 @@ namespace DotNetPythonBridge
             if (result.ExitCode != 0)
             {
                 Log.Logger.LogError($"Script execution failed with error: {result.Error}");
-                throw new Exception($"Script failed with error: {result.Error}");
+                throw new InvalidOperationException($"Script failed with error: {result.Error}");
             }
 
             return result;
@@ -102,7 +102,7 @@ namespace DotNetPythonBridge
             if (result.ExitCode != 0)
             {
                 Log.Logger.LogError($"Script execution failed with error: {result.Error}");
-                throw new Exception($"Script failed with error: {result.Error}");
+                throw new InvalidOperationException($"Script failed with error: {result.Error}");
             }
 
             return result;
@@ -126,7 +126,7 @@ namespace DotNetPythonBridge
             if (result.ExitCode != 0)
             {
                 Log.Logger.LogError($"Code execution failed with error: {result.Error}");
-                throw new Exception($"Code execution failed with error: {result.Error}");
+                throw new InvalidOperationException($"Code execution failed with error: {result.Error}");
             }
 
             return result;
@@ -167,7 +167,7 @@ namespace DotNetPythonBridge
             if (result.ExitCode != 0)
             {
                 Log.Logger.LogError($"Code execution failed with error: {result.Error}");
-                throw new Exception($"Code execution failed with error: {result.Error}");
+                throw new InvalidOperationException($"Code execution failed with error: {result.Error}");
             }
 
             return result;
@@ -188,7 +188,7 @@ namespace DotNetPythonBridge
                 if (env == null)
                 {
                     Log.Logger.LogError("No base Python environment found in CondaManager.");
-                    throw new Exception("No base Python environment found in CondaManager.");
+                    throw new InvalidOperationException("No base Python environment found in CondaManager.");
                 }
                 Log.Logger.LogInformation($"No environment specified. Using base environment: {env.Name}");
             }
@@ -202,14 +202,14 @@ namespace DotNetPythonBridge
                     if (env == null)
                     {
                         Log.Logger.LogError("No base Python environment found in CondaManager after initialization.");
-                        throw new Exception("No base Python environment found in CondaManager after initialization.");
+                        throw new InvalidOperationException("No base Python environment found in CondaManager after initialization.");
                     }
                     Log.Logger.LogInformation($"No environment specified. Using base environment: {env.Name}");
                 }
                 else
                 {
                     Log.Logger.LogError("No Python environment specified and no CondaManager available to determine base environment.");
-                    throw new Exception("No Python environment specified and no CondaManager available to determine base environment.");
+                    throw new InvalidOperationException("No Python environment specified and no CondaManager available to determine base environment.");
                 }
             }
 
@@ -248,7 +248,7 @@ namespace DotNetPythonBridge
                 if (env == null)
                 {
                     Log.Logger.LogError("No base Python environment found in CondaManager for WSL.");
-                    throw new Exception("No base Python environment found in CondaManager for WSL.");
+                    throw new InvalidOperationException("No base Python environment found in CondaManager for WSL.");
                 }
                 Log.Logger.LogInformation($"No environment specified. Using base environment: {env.Name}");
             }
@@ -262,14 +262,14 @@ namespace DotNetPythonBridge
                     if (env == null)
                     {
                         Log.Logger.LogError("No base Python environment found in CondaManager for WSL after initialization.");
-                        throw new Exception("No base Python environment found in CondaManager for WSL after initialization.");
+                        throw new InvalidOperationException("No base Python environment found in CondaManager for WSL after initialization.");
                     }
                     Log.Logger.LogInformation($"No environment specified. Using base environment: {env.Name}");
                 }
                 else
                 {
                     Log.Logger.LogError("No Python environment specified and no CondaManager available to determine base environment for WSL.");
-                    throw new Exception("No Python environment specified and no CondaManager available to determine base environment for WSL.");
+                    throw new InvalidOperationException("No Python environment specified and no CondaManager available to determine base environment for WSL.");
                 }
             }
 

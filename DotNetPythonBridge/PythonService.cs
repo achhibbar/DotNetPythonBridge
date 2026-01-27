@@ -75,7 +75,7 @@ namespace DotNetPythonBridge
                 Log.Logger.LogInformation($"Python service (PID: {service.Pid}) is healthy on port {service.Port}");
                 return service;
             }
-            throw new Exception($"Python service failed to become healthy after {options.ServiceRetryCount} attempts.");
+            throw new InvalidOperationException($"Python service failed to become healthy after {options.ServiceRetryCount} attempts.");
         }
 
         /// <summary>
@@ -150,7 +150,7 @@ namespace DotNetPythonBridge
 
                 return service;
             }
-            throw new Exception($"Python service failed to become healthy after {options.ServiceRetryCount} attempts.");
+            throw new InvalidOperationException($"Python service failed to become healthy after {options.ServiceRetryCount} attempts.");
         }
 
 
@@ -184,9 +184,9 @@ namespace DotNetPythonBridge
                 {
                     // request timed out or cancelled, continue polling
                 }
-                catch
+                catch (HttpRequestException)
                 {
-                    // ignore until timeout
+                    // network error, ignore until timeout
                 }
 
                 try

@@ -119,9 +119,17 @@ namespace DotNetPythonBridge.Utils
                 catch (SocketException)
                 {
                     Log.Logger.LogError($"Port {port} is already in use and cannot be reserved.");
-                    throw new Exception($"Port {port} is already in use and cannot be reserved.");
+                    throw new PortInUseException(port);
                 }
             }
+        }
+    }
+
+    internal class PortInUseException : Exception
+    {
+        internal PortInUseException(int port)
+            : base($"Port {port} is already in use and cannot be reserved.")
+        {
         }
     }
 }

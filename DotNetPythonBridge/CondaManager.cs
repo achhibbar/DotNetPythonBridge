@@ -109,7 +109,7 @@ namespace DotNetPythonBridge
                         if (rslt.ExitCode != 0)
                         {
                             Log.Logger.LogError($"Failed to warm up WSL Distro {_options.DefaultWSLDistro}: {rslt.Error}");
-                            throw new Exception($"Failed to warm up WSL Distro {_options.DefaultWSLDistro}: {rslt.Error}");
+                            throw new InvalidOperationException($"Failed to warm up WSL Distro {_options.DefaultWSLDistro}: {rslt.Error}");
                         }
 
                         // use which to verify the conda path exists in WSL
@@ -148,11 +148,15 @@ namespace DotNetPythonBridge
                         // get all the conda/mamba envs in WSL, if reinitialize is true, force refresh
                         await ListEnvironmentsWSL(WSL, refresh: reinitialize);
                     }
-                    catch (Exception ex)
+                    catch (FileNotFoundException ex)
                     {
                         Log.Logger.LogWarning($"Failed to auto-detect conda/mamba in WSL Distro {_WSL_distroName}: {ex.Message}");
-                        updateWSLCondaPath(null); // set the wsl conda path to null with a lock
-                        //_WSL_condaPath = null; // leave it null, user can set it later
+                        updateWSLCondaPath(null);
+                    }
+                    catch (InvalidOperationException ex)
+                    {
+                        Log.Logger.LogWarning($"Failed to auto-detect conda/mamba in WSL Distro {_WSL_distroName}: {ex.Message}");
+                        updateWSLCondaPath(null);
                     }
                 }
                 else // if neither wsl distro nor wsl conda path is provided, do nothing and leave them null
@@ -188,11 +192,15 @@ namespace DotNetPythonBridge
                         // get all the conda/mamba envs in WSL, if reinitialize is true, force refresh
                         await ListEnvironmentsWSL(WSL, refresh: reinitialize);
                     }
-                    catch (Exception ex)
+                    catch (FileNotFoundException ex)
                     {
                         Log.Logger.LogWarning($"Failed to auto-detect conda/mamba in WSL Distro {_WSL_distroName}: {ex.Message}");
-                        //_WSL_condaPath = null; // leave it null, user can set it later
-                        updateWSLCondaPath(null); // set the wsl conda path to null with a lock
+                        updateWSLCondaPath(null);
+                    }
+                    catch (InvalidOperationException ex)
+                    {
+                        Log.Logger.LogWarning($"Failed to auto-detect conda/mamba in WSL Distro {_WSL_distroName}: {ex.Message}");
+                        updateWSLCondaPath(null);
                     }
                 }
                 else
@@ -250,13 +258,17 @@ namespace DotNetPythonBridge
                             updateCondaPath(candidate);
                             //_condaPath = candidate;
                             Log.Logger.LogInformation($"Found conda/mamba at: {_condaPath}");
-                            return _condaPath;
+                            return _condaPath ?? throw new InvalidOperationException("Conda path is not initialized."); // if condaPath is null, throw error
                         }
                     }
                 }
-                catch 
-                { 
-                    Log.Logger.LogWarning($"Failed to find {exe}.");
+                catch (OperationCanceledException)
+                {
+                    Log.Logger.LogWarning($"Timeout or cancellation occurred while searching for {exe}.");
+                }
+                catch (Exception ex)
+                {
+                    Log.Logger.LogWarning($"Failed to find {exe}: {ex.Message}");
                 }
             }
 
@@ -265,28 +277,28 @@ namespace DotNetPythonBridge
             string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
 
             string[] windowsCandidates = {
-            Path.Combine(user, "miniconda3", "Scripts", "conda.exe"),
-            Path.Combine(user, "anaconda3", "Scripts", "conda.exe"),
-            Path.Combine(localAppData, "miniconda3", "Scripts", "conda.exe"),
-            Path.Combine(localAppData, "anaconda3", "Scripts", "conda.exe"),
-            Path.Combine(user, "miniconda3", "Scripts", "mamba.exe"),
-            Path.Combine(user, "anaconda3", "Scripts", "mamba.exe"),
-            Path.Combine(localAppData, "miniconda3", "Scripts", "mamba.exe"),
-            Path.Combine(localAppData, "anaconda3", "Scripts", "mamba.exe")
-        };
+                Path.Combine(user, "miniconda3", "Scripts", "conda.exe"),
+                Path.Combine(user, "anaconda3", "Scripts", "conda.exe"),
+                Path.Combine(localAppData, "miniconda3", "Scripts", "conda.exe"),
+                Path.Combine(localAppData, "anaconda3", "Scripts", "conda.exe"),
+                Path.Combine(user, "miniconda3", "Scripts", "mamba.exe"),
+                Path.Combine(user, "anaconda3", "Scripts", "mamba.exe"),
+                Path.Combine(localAppData, "miniconda3", "Scripts", "mamba.exe"),
+                Path.Combine(localAppData, "anaconda3", "Scripts", "mamba.exe")
+            };
 
             string[] linuxMacCandidates = {
-            Path.Combine(user, "miniconda3", "bin", "conda"),
-            Path.Combine(user, "anaconda3", "bin", "conda"),
-            "/opt/miniconda3/bin/conda",
-            "/opt/anaconda3/bin/conda",
-            "/usr/local/bin/conda",
-            Path.Combine(user, "miniconda3", "bin", "mamba"),
-            Path.Combine(user, "anaconda3", "bin", "mamba"),
-            "/opt/miniconda3/bin/mamba",
-            "/opt/anaconda3/bin/mamba",
-            "/usr/local/bin/mamba"
-        };
+                Path.Combine(user, "miniconda3", "bin", "conda"),
+                Path.Combine(user, "anaconda3", "bin", "conda"),
+                "/opt/miniconda3/bin/conda",
+                "/opt/anaconda3/bin/conda",
+                "/usr/local/bin/conda",
+                Path.Combine(user, "miniconda3", "bin", "mamba"),
+                Path.Combine(user, "anaconda3", "bin", "mamba"),
+                "/opt/miniconda3/bin/mamba",
+                "/opt/anaconda3/bin/mamba",
+                "/usr/local/bin/mamba"
+            };
 
             var candidates = isWindows ? windowsCandidates : linuxMacCandidates;
 
@@ -395,9 +407,13 @@ namespace DotNetPythonBridge
                             }
                         }
                     }
-                    catch
+                    catch (OperationCanceledException)
                     {
-                        Log.Logger.LogWarning($"Failed to find {exe} in WSL.");
+                        Log.Logger.LogWarning($"Timeout or cancellation occurred while searching for {exe} in WSL.");
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Logger.LogWarning($"Failed to find {exe} in WSL: {ex.Message}");
                     }
                 }
 
@@ -451,7 +467,7 @@ namespace DotNetPythonBridge
             if (result.ExitCode != 0)
             {
                 Log.Logger.LogError($"Failed to list environments: {result.Error}");
-                throw new Exception($"Failed to list environments: {result.Error}");
+                throw new InvalidOperationException($"Failed to list environments: {result.Error}");
             }
 
             using var doc = JsonDocument.Parse(result.Output);
@@ -514,7 +530,7 @@ namespace DotNetPythonBridge
             if (wslDistro != null) // A specific distro is provided
             {
                 string buildBashCondaCommand = BashCommandBuilder.BuildBashCondaCommand(await GetCondaOrMambaPathWSL(wslDistro), "info --json"); //%
-                var result = await ProcessHelper.RunProcess("wsl", new[] { "-d", wslDistro.Name, "bash", "-lic", buildBashCondaCommand }, 
+                var result = await ProcessHelper.RunProcess("wsl", new[] { "-d", wslDistro.Name, "bash", "-lic", buildBashCondaCommand },
                     timeout: _options.CondaListEnvironmentsTimeout);
 
                 //string escapedCondaPath = FilenameHelper.BashEscape(await GetCondaOrMambaPathWSL(wslDistro)); // escape any special chars in the conda path for bash
@@ -525,7 +541,7 @@ namespace DotNetPythonBridge
                 if (result.ExitCode != 0)
                 {
                     Log.Logger.LogError($"Failed to list environments in WSL: {result.Error}");
-                    throw new Exception($"Failed to list environments: {result.Error}");
+                    throw new InvalidOperationException($"Failed to list environments: {result.Error}");
                 }
 
                 using var doc = JsonDocument.Parse(result.Output);
@@ -580,7 +596,7 @@ namespace DotNetPythonBridge
                 if (string.IsNullOrEmpty(_WSL_distroName))
                 {
                     Log.Logger.LogError("WSL Distro not specified and no default WSL Distro initialized.");
-                    throw new Exception("WSL Distro not specified and no default WSL Distro initialized.");
+                    throw new InvalidOperationException("WSL Distro not specified and no default WSL Distro initialized.");
                 }
 
                 return await ListEnvironmentsWSL(new WSL_Helper.WSL_Distro(_WSL_distroName, false), true);
@@ -610,7 +626,7 @@ namespace DotNetPythonBridge
                 }
             }
             Log.Logger.LogError($"Environment '{envName}' not found.");
-            throw new Exception($"Environment '{envName}' not found.");
+            throw new KeyNotFoundException($"Environment '{envName}' not found.");
         }
 
         /// <summary>
@@ -638,7 +654,7 @@ namespace DotNetPythonBridge
                     }
                 }
                 Log.Logger.LogError($"Environment '{envName}' not found in WSL Distro {wslDistro.Name}.");
-                throw new Exception($"Environment '{envName}' not found.");
+                throw new KeyNotFoundException($"Environment '{envName}' not found in WSL Distro {wslDistro.Name}.");
             }
             else // no WSL distro provided, use initialized distro if available or get default distro
             {
@@ -654,7 +670,7 @@ namespace DotNetPythonBridge
                 if (string.IsNullOrEmpty(_WSL_distroName))
                 {
                     Log.Logger.LogError("WSL Distro not specified and no default WSL Distro initialized.");
-                    throw new Exception("WSL Distro not specified and no default WSL Distro initialized.");
+                    throw new InvalidOperationException("WSL Distro not specified and no default WSL Distro initialized.");
                 }
 
                 return await GetEnvironmentWSL(envName, new WSL_Helper.WSL_Distro(_WSL_distroName, false));
@@ -692,7 +708,7 @@ namespace DotNetPythonBridge
             if (result.ExitCode != 0)
             {
                 Log.Logger.LogError($"Failed to create env {envName}: {result.Error}");
-                throw new Exception($"Failed to create env {envName}: {result.Error}");
+                throw new InvalidOperationException($"Failed to create env {envName}: {result.Error}");
             }
         }
 
@@ -713,23 +729,14 @@ namespace DotNetPythonBridge
             {
                 // if the yaml file is a windows path, convert it to WSL path
                 yamlFile = FilenameHelper.convertWindowsPathToWSL(yamlFile);
-                //string escapedYamlFile = FilenameHelper.BashEscape(yamlFile); // escape any special chars in the yaml file path for bash
-                //string escapedCondaPath = FilenameHelper.BashEscape(await GetCondaOrMambaPathWSL(wslDistro)); // escape any special chars in the conda path for bash
 
                 if (string.IsNullOrEmpty(envName)) // use env name from YAML
                 {
-                    // Use bash -lic to properly source the environment in WSL, and wrap yamlFile in single quotes to avoid issues with special chars
-                    //string bashCommand = $"bash -lic \"{escapedCondaPath} env create -f {escapedYamlFile}\"";
-                    //result = await ProcessHelper.RunProcess("wsl", $"-d {wslDistro.Name} {bashCommand}");
                     string bashCommand = BashCommandBuilder.BuildBashCreateCondaEnvCmd(await GetCondaOrMambaPathWSL(wslDistro), yamlFile, null);
                     result = await ProcessHelper.RunProcess("wsl", new[] { "-d", wslDistro.Name, "bash", "-lic", bashCommand }, timeout: _options.CondaCreateEnvironmentTimeout);
                 }
                 else // use specified env name to override name in YAML
                 {
-                    //string escapedEnvName = FilenameHelper.BashEscape(envName); // escape any special chars in the env name for bash
-                    //string bashCommand = $"bash -lic \"{escapedCondaPath} env create -n {escapedEnvName} -f {escapedYamlFile}\"";
-                    // Use bash -lic to properly source the environment in WSL, and wrap yamlFile in single quotes to avoid issues with special chars
-                    //result = await ProcessHelper.RunProcess("wsl", $"-d {wslDistro.Name} {bashCommand}");
                     string bashCommand = BashCommandBuilder.BuildBashCreateCondaEnvCmd(await GetCondaOrMambaPathWSL(wslDistro), yamlFile, envName);
                     result = await ProcessHelper.RunProcess("wsl", new[] { "-d", wslDistro.Name, "bash", "-lic", bashCommand }, timeout: _options.CondaCreateEnvironmentTimeout);
                 }
@@ -737,7 +744,7 @@ namespace DotNetPythonBridge
                 if (result.ExitCode != 0)
                 {
                     Log.Logger.LogError($"Failed to create env {envName} in WSL: {result.Error}");
-                    throw new Exception($"Failed to create env {envName} in WSL: {result.Error}");
+                    throw new InvalidOperationException($"Failed to create env {envName} in WSL: {result.Error}");
                 }
             }
             else // no WSL distro provided, use initialized distro if available or get default distro
@@ -755,7 +762,7 @@ namespace DotNetPythonBridge
                 if (string.IsNullOrEmpty(_WSL_distroName))
                 {
                     Log.Logger.LogError("WSL Distro not specified and no default WSL Distro initialized.");
-                    throw new Exception("WSL Distro not specified and no default WSL Distro initialized.");
+                    throw new InvalidOperationException("WSL Distro not specified and no default WSL Distro initialized.");
                 }
 
                 await CreateEnvironmentWSL(yamlFile, envName, new WSL_Helper.WSL_Distro(_WSL_distroName, false));
@@ -775,9 +782,8 @@ namespace DotNetPythonBridge
             if (result.ExitCode != 0)
             {
                 Log.Logger.LogError($"Failed to delete env {envName}: {result.Error}");
-                throw new Exception($"Failed to delete env {envName}: {result.Error}");
+                throw new InvalidOperationException($"Failed to delete env {envName}: {result.Error}");
             }
-
         }
 
         /// <summary>
@@ -791,14 +797,12 @@ namespace DotNetPythonBridge
             {
                 string bashCommand = BashCommandBuilder.BuildBashDeleteCondaEnvCmd(await GetCondaOrMambaPathWSL(wslDistro), envName);
 
-                // Use bash -lic to properly source the environment in WSL
-                //var result = await ProcessHelper.RunProcess("wsl", $"-d {wslDistro.Name} bash -lic {bashCommand}");
                 var result = await ProcessHelper.RunProcess("wsl", new[] { "-d", wslDistro.Name, "bash", "-lic", bashCommand }, timeout: _options.CondaDeleteEnvironmentTimeout);
 
                 if (result.ExitCode != 0)
                 {
                     Log.Logger.LogError($"Failed to delete env {envName} in WSL: {result.Error}");
-                    throw new Exception($"Failed to delete env {envName} in WSL: {result.Error}");
+                    throw new InvalidOperationException($"Failed to delete env {envName} in WSL: {result.Error}");
                 }
             }
             else // no wslDistro provided, use initialized distro if available or get default distro
@@ -816,13 +820,12 @@ namespace DotNetPythonBridge
                 if (string.IsNullOrEmpty(_WSL_distroName))
                 {
                     Log.Logger.LogError("WSL Distro not specified and no default WSL Distro initialized.");
-                    throw new Exception("WSL Distro not specified and no default WSL Distro initialized.");
+                    throw new InvalidOperationException("WSL Distro not specified and no default WSL Distro initialized.");
                 }
 
                 await DeleteEnvironmentWSL(envName, new WSL_Helper.WSL_Distro(_WSL_distroName, false));
                 return;
             }
-
         }
 
         // Thread-safe update of _isInitialized

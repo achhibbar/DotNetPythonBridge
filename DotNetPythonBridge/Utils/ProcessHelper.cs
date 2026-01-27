@@ -141,7 +141,7 @@ namespace DotNetPythonBridge.Utils
             Log.Logger.LogDebug($"Running process: {psi.FileName} {psi.Arguments}");
 
             using var proc = Process.Start(psi)
-                ?? throw new Exception("Failed to start process.");
+                ?? throw new InvalidOperationException("Failed to start process.");
 
             Task<string> outputTask = proc.StandardOutput.ReadToEndAsync();
             Task<string> errorTask = proc.StandardError.ReadToEndAsync();
@@ -276,7 +276,7 @@ namespace DotNetPythonBridge.Utils
             var proc = Process.Start(psi)!;
 
             if (proc.HasExited)
-                throw new Exception("Process exited prematurely.");
+                throw new InvalidOperationException("Failed to start process.");
 
             proc.OutputDataReceived += (s, e) =>
             {
