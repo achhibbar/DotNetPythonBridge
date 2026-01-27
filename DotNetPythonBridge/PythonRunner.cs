@@ -294,9 +294,10 @@ namespace DotNetPythonBridge
             //var checkResult = await ProcessHelper.RunProcess("wsl", $"-d {wSL_Distro.Name} {bashCmd}");
             //var checkResult = await ProcessHelper.RunProcess("wsl", $"-d {wSL_Distro.Name} bash -lic \"test -f {exe} && echo exists\"");
 
-            if (checkResult.Output.Trim() != "exists")
+            if (checkResult.Output.Trim() != "exists") //file does not exist
             {
-                Log.Logger.LogError($"Python executable not found for environment {env.Name} at {exe} inside WSL distro {wSL_Distro.Name}");
+                // Log the contents of checkResult for debugging
+                Log.Logger.LogError($"Python executable not found for environment {env.Name} at {exe} inside WSL distro {wSL_Distro.Name}. Check result output: {checkResult.Output}, Error: {checkResult.Error}");
                 throw new FileNotFoundException($"Python executable not found for environment {env.Name} at {exe} inside WSL distro {wSL_Distro.Name}");
             }
 

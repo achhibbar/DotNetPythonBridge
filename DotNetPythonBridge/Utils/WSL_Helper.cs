@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
@@ -43,33 +44,24 @@ namespace DotNetPythonBridge.Utils
                 var result = await ProcessHelper.RunProcess("wsl", "-l -v", timeout: listDistrosTimeout, encoding: Encoding.Unicode); //& use Unicode encoding to handle possible non-ASCII characters
                 if (result.ExitCode == 0 && !string.IsNullOrWhiteSpace(result.Output))
                 {
-                    //store the distris in WSL_Distro object
+                    //store the distros in WSL_Distro object
                     WSL_Distros distros = new WSL_Distros();
                     var lines = result.Output.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
 
                     //skip the first header line
                     foreach (var line in lines.Skip(1))
                     {
-                        // Example line for default distro: "*    Ubuntu-20.04    Running    2"
-                        var parts = line.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                        if (parts.Length >= 4)
+                        // Example: "* Ubuntu-20.04 Running 2"
+                        var match = Regex.Match(line, @"^\*?\s*(\S+)\s+(\S+)\s+(\d+)"); // regex to match distro name
+                        if (match.Success)
                         {
-                            bool isDefault = parts[0] == "*";
-                            string name = parts[1];
-                            distros.Distros.Add(new WSL_Distro(name, isDefault));
+                            bool isDefault = line.TrimStart().StartsWith("*"); // check if line starts with "*" and if it does, it's the default distro
+                            string name = match.Groups[1].Value; // if regex matched, get the distro name
+                            distros.Distros.Add(new WSL_Distro(name, isDefault)); // add the distro to the list
                             // warm up the distro
                             await WarmupWSL_Distro(name, wslWarmupTimeout);
                             Log.Logger.LogInformation($"Found WSL Distro: {name}, Default: {isDefault}");
                         }
-                        else if (parts.Length == 3) // handle case for non-default distro without the "*"
-                        {
-                            bool isDefault = false;
-                            string name = parts[0];
-                            distros.Distros.Add(new WSL_Distro(name, isDefault));
-                            // warm up the distro
-                            await WarmupWSL_Distro(name, wslWarmupTimeout);
-                            Log.Logger.LogInformation($"Found WSL Distro: {name}, Default: {isDefault}");
-                        } 
                     }
 
                     // Cache the retrieved distros and return
@@ -77,9 +69,13 @@ namespace DotNetPythonBridge.Utils
                     return distros;
                 }
             }
-            catch 
+            catch (PlatformNotSupportedException ex)
             {
-                Log.Logger.LogError("Failed to retrieve WSL distributions. Ensure WSL is installed and accessible.");
+                Log.Logger.LogError("WSL is only available on Windows 10/11. " + ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Log.Logger.LogError("Failed to retrieve WSL distributions. Ensure WSL is installed and accessible. " + ex.Message);
             }
 
             Log.Logger.LogError("No WSL distributions found. Please install a WSL distribution.");

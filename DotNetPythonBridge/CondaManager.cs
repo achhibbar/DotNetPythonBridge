@@ -370,34 +370,46 @@ namespace DotNetPythonBridge
 
                         var result = await ProcessHelper.RunProcess("wsl", args, timeout: _options.CondaWhichTimeout);
 
+                        string candidate = "";
+                        bool foundValidOutput = false;
+
                         // ensure the output is not the welcome message, and if so, try again after a delay for up to 2 times
                         for (int attempt = 0; attempt < 2; attempt++)
                         {
-                            if (result.ExitCode == 0 && !string.IsNullOrWhiteSpace(result.Output))
+                            if (result.ExitCode == 0 && !string.IsNullOrWhiteSpace(result.Output)) // only check output if command succeeded
                             {
-                                var firstLine = result.Output.Trim().Split('\n')[0].Trim();
-                                if (firstLine.Contains("Welcome to", StringComparison.OrdinalIgnoreCase) ||
-                                                                       firstLine.Contains("Microsoft", StringComparison.OrdinalIgnoreCase) ||
-                                                                                                          firstLine.Contains("WSL", StringComparison.OrdinalIgnoreCase))
+                                var lines = result.Output.Trim().Split('\n'); // get all lines of output
+                                foreach (var line in lines)
                                 {
-                                    Log.Logger.LogWarning($"Received WSL welcome message instead of conda/mamba path. Retrying...");
-                                    await Task.Delay(1000); // wait for 1 second before retrying
-                                    result = await ProcessHelper.RunProcess("wsl", args, timeout: _options.CondaWhichTimeout);
-                                }
-                                else
-                                {
-                                    break; // valid output, break the retry loop
+                                    candidate = line.Trim(); // trim whitespace
+                                    if (candidate.StartsWith("/")) // if the line looks like a valid path, use it
+                                    {
+                                        // valid output, break the retry loop
+                                        foundValidOutput = true;
+                                        break;
+                                    }
                                 }
                             }
                             else
                             {
                                 break; // command failed, break the retry loop
                             }
+
+                            if (foundValidOutput)
+                            {
+                                break; // valid output found, exit the retry loop
+                            }
+                            else
+                            {
+                                Log.Logger.LogWarning($"Received WSL welcome message or invalid output instead of conda/mamba path. Retrying...");
+                                await Task.Delay(1000); // wait for 1 second before retrying
+                                result = await ProcessHelper.RunProcess("wsl", args, timeout: _options.CondaWhichTimeout);
+                            }
                         }
 
                         if (result.ExitCode == 0 && !string.IsNullOrWhiteSpace(result.Output))
                         {
-                            var candidate = result.Output.Trim().Split('\n')[0].Trim();
+                            candidate = result.Output.Trim().Split('\n')[0].Trim(); // take the first line as candidate
                             if (!string.IsNullOrEmpty(candidate))
                             {
                                 updateWSLCondaPath(candidate);
