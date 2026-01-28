@@ -12,53 +12,6 @@ namespace DotNetPythonBridge.Utils
     internal static class ProcessHelper
     {
         /// <summary>
-        /// Get the appropriate encoding for the process based on the OS and command being run.
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="args"></param>
-        /// <returns></returns>
-        //private static Encoding GetEncodingForProcess(string file, string args)
-        //{
-        //    // If running WSL bash on Windows, use UTF-8 encoding. This is to get conda/mamba paths correctly for wsl distros.
-        //    // This is also used when running python scripts or code in WSL on Windows.
-        //    if (OperatingSystem.IsWindows() && file.ToLower().Contains("wsl") && args.ToLower().Contains("bash"))
-        //    {
-        //        return Encoding.UTF8;
-        //    }
-        //    // Windows + conda info
-        //    else if (OperatingSystem.IsWindows() && args.ToLower().Contains("info"))
-        //    {
-        //        return Encoding.GetEncoding("utf-8"); // Use UTF-8 and not Encoding.UTF8 to avoid BOM issues
-        //        //return Encoding.UTF8;
-        //    }
-        //    //when running a python script on windows, the output is in utf-8
-        //    else if (OperatingSystem.IsWindows() && file.ToLower().Contains("python") && args.ToLower().Contains(".py"))
-        //    {
-        //        return Encoding.UTF8;
-        //    }
-        //    // when running python code on windows, the output is in utf-8
-        //    else if (OperatingSystem.IsWindows() && file.ToLower().Contains("python") && args.ToLower().Contains("-c"))
-        //    {
-        //        return Encoding.UTF8;
-        //    }
-        //    // else if (OperatingSystem.IsWindows() && getting a list of wsl distros
-        //    else if (OperatingSystem.IsWindows() && file.ToLower().Contains("wsl") && args.ToLower().Contains("-l"))
-        //    {
-        //        return Encoding.Unicode;
-        //    }
-        //    // Windows
-        //    else if (OperatingSystem.IsWindows())
-        //    {
-        //        return Encoding.UTF8;
-        //    }
-        //    // Linux and MacOS
-        //    else
-        //    {
-        //        return Encoding.UTF8;
-        //    }
-        //}
-
-        /// <summary>
         /// Runner for processes with arg list
         /// </summary>
         /// <param name="file"></param>

@@ -32,7 +32,6 @@ namespace DotNetPythonBridge.Utils
             // Check if the path is already in WSL format
             if (windowsPath.StartsWith("/mnt/") || windowsPath.StartsWith("/"))
             {
-                Log.Logger.LogInformation($"Path is already in WSL format: '{windowsPath}'");
                 return windowsPath;
             }
 
@@ -45,7 +44,7 @@ namespace DotNetPythonBridge.Utils
             }
 
             string pathWithoutDrive = windowsPath.Substring(2).Replace('\\', '/');
-            Log.Logger.LogInformation($"Converted Windows path '{windowsPath}' to WSL path '/mnt/{char.ToLower(driveLetter)}{pathWithoutDrive}'");
+            Log.Logger.LogDebug($"Converted Windows path '{windowsPath}' to WSL path '/mnt/{char.ToLower(driveLetter)}{pathWithoutDrive}'");
             return $"/mnt/{char.ToLower(driveLetter)}{pathWithoutDrive}";
         }
 
@@ -63,7 +62,6 @@ namespace DotNetPythonBridge.Utils
             // Check if the path is already in Windows format
             if (WSL_condaPath.StartsWith("\\\\wsl$\\"))
             {
-                Log.Logger.LogInformation($"Path is already in Windows format: '{WSL_condaPath}'");
                 return WSL_condaPath;
             }
 
@@ -75,7 +73,7 @@ namespace DotNetPythonBridge.Utils
             }
 
             string windowsPath = $"\\\\wsl$\\{WSL_DistroName}{WSL_condaPath.Replace('/', '\\')}";
-            Log.Logger.LogInformation($"Converted WSL conda path '{WSL_condaPath}' in distro '{WSL_DistroName}' to Windows path '{windowsPath}'");
+            Log.Logger.LogDebug($"Converted WSL conda path '{WSL_condaPath}' in distro '{WSL_DistroName}' to Windows path '{windowsPath}'");
             return windowsPath;
         }
     }

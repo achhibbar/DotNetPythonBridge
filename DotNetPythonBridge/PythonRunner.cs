@@ -16,7 +16,7 @@ namespace DotNetPythonBridge
     CancellationToken cancellationToken = default, TimeSpan? timeout = null)
         {
             // Log the execution details, handle null env
-            Log.Logger.LogInformation($"Running script: {scriptPath} with arguments: {arguments} in environment: {(env != null ? env.Name : "Base")}");
+            Log.Logger.LogDebug($"Running script: {scriptPath} with arguments: {arguments} in environment: {(env != null ? env.Name : "Base")}");
 
             string pythonExe = await GetPythonExecutable(env);
             string escapedScriptPath = FilenameHelper.EnsureFilepathQuoted(scriptPath);
@@ -56,12 +56,12 @@ namespace DotNetPythonBridge
         public static async Task<PythonResult> RunScriptWSL(string scriptPath, PythonEnvironment? env = null, WSL_Helper.WSL_Distro? wSL_Distro = null, string[]? arguments = null,
             CancellationToken cancellationToken = default, TimeSpan? timeout = null)
         {
-            Log.Logger.LogInformation($"Running script: {scriptPath} with arguments: {arguments} in environment: {(env != null ? env.Name : "Base")}, WSL: {(wSL_Distro != null ? wSL_Distro.Name : "Default")}");
+            Log.Logger.LogDebug($"Running script: {scriptPath} with arguments: {arguments} in environment: {(env != null ? env.Name : "Base")}, WSL: {(wSL_Distro != null ? wSL_Distro.Name : "Default")}");
 
             if (wSL_Distro == null)
             {
                 wSL_Distro = await getDefaultWSL_Distro();
-                Log.Logger.LogInformation($"No WSL distribution specified. Using default WSL distribution: {wSL_Distro.Name}");
+                Log.Logger.LogDebug($"No WSL distribution specified. Using default WSL distribution: {wSL_Distro.Name}");
             }
 
             string pythonExe = await GetPythonExecutableWSL(env, wSL_Distro);
@@ -114,7 +114,7 @@ namespace DotNetPythonBridge
         public static async Task<PythonResult> RunCode(string code, PythonEnvironment? env = null, CancellationToken cancellationToken = default, TimeSpan? timeout = null)
         {
             // Log the execution details, handle null env
-            Log.Logger.LogInformation($"Running inline code in environment: {(env != null ? env.Name : "Base")}");
+            Log.Logger.LogDebug($"Running inline code in environment: {(env != null ? env.Name : "Base")}");
 
             string pythonExe = await GetPythonExecutable(env);
 
@@ -138,12 +138,12 @@ namespace DotNetPythonBridge
         public static async Task<PythonResult> RunCodeWSL(string code, PythonEnvironment? env = null, WSL_Helper.WSL_Distro? wSL_Distro = null,
             CancellationToken cancellationToken = default, TimeSpan? timeout = null)
         {
-            Log.Logger.LogInformation($"Running inline code in environment: {(env != null ? env.Name : "Base")}, WSL: {(wSL_Distro != null ? wSL_Distro.Name : "Base")}");
+            Log.Logger.LogDebug($"Running inline code in environment: {(env != null ? env.Name : "Base")}, WSL: {(wSL_Distro != null ? wSL_Distro.Name : "Base")}");
 
             if (wSL_Distro == null)
             {
                 wSL_Distro = await getDefaultWSL_Distro();
-                Log.Logger.LogInformation($"No WSL distribution specified. Using default WSL distribution: {wSL_Distro.Name}");
+                Log.Logger.LogDebug($"No WSL distribution specified. Using default WSL distribution: {wSL_Distro.Name}");
             }
 
             string pythonExe = await GetPythonExecutableWSL(env, wSL_Distro);
@@ -179,7 +179,7 @@ namespace DotNetPythonBridge
         /// </summary>
         public static async Task<string> GetPythonExecutable(PythonEnvironment? env = null)
         {
-            Log.Logger.LogInformation($"Resolving Python executable for environment: {(env != null ? env.Name : "Base")}");
+            Log.Logger.LogDebug($"Resolving Python executable for environment: {(env != null ? env.Name : "Base")}");
 
             // if no environment is provided, use the base conda environment
             if (env == null && CondaManager.PythonEnvironments != null)
@@ -190,7 +190,7 @@ namespace DotNetPythonBridge
                     Log.Logger.LogError("No base Python environment found in CondaManager.");
                     throw new InvalidOperationException("No base Python environment found in CondaManager.");
                 }
-                Log.Logger.LogInformation($"No environment specified. Using base environment: {env.Name}");
+                Log.Logger.LogDebug($"No environment specified. Using base environment: {env.Name}");
             }
             else if (env == null)
             {
@@ -204,7 +204,7 @@ namespace DotNetPythonBridge
                         Log.Logger.LogError("No base Python environment found in CondaManager after initialization.");
                         throw new InvalidOperationException("No base Python environment found in CondaManager after initialization.");
                     }
-                    Log.Logger.LogInformation($"No environment specified. Using base environment: {env.Name}");
+                    Log.Logger.LogDebug($"No environment specified. Using base environment: {env.Name}");
                 }
                 else
                 {
@@ -233,12 +233,12 @@ namespace DotNetPythonBridge
         /// </summary>
         public static async Task<string> GetPythonExecutableWSL(PythonEnvironment? env = null, WSL_Helper.WSL_Distro? wSL_Distro = null)
         {
-            Log.Logger.LogInformation($"Resolving Python executable for environment: {(env != null ? env.Name : "Base")}, WSL: {(wSL_Distro != null ? wSL_Distro.Name : "Default")}");
+            Log.Logger.LogDebug($"Resolving Python executable for environment: {(env != null ? env.Name : "Base")}, WSL: {(wSL_Distro != null ? wSL_Distro.Name : "Default")}");
 
             if (wSL_Distro == null)
             {
                 wSL_Distro = await getDefaultWSL_Distro();
-                Log.Logger.LogInformation($"No WSL distribution specified. Using default WSL distribution: {wSL_Distro.Name}");
+                Log.Logger.LogDebug($"No WSL distribution specified. Using default WSL distribution: {wSL_Distro.Name}");
             }
 
             // if no environment is provided, use the base conda environment
@@ -250,7 +250,7 @@ namespace DotNetPythonBridge
                     Log.Logger.LogError("No base Python environment found in CondaManager for WSL.");
                     throw new InvalidOperationException("No base Python environment found in CondaManager for WSL.");
                 }
-                Log.Logger.LogInformation($"No environment specified. Using base environment: {env.Name}");
+                Log.Logger.LogDebug($"No environment specified. Using base environment: {env.Name}");
             }
             else if (env == null)
             {
@@ -264,7 +264,7 @@ namespace DotNetPythonBridge
                         Log.Logger.LogError("No base Python environment found in CondaManager for WSL after initialization.");
                         throw new InvalidOperationException("No base Python environment found in CondaManager for WSL after initialization.");
                     }
-                    Log.Logger.LogInformation($"No environment specified. Using base environment: {env.Name}");
+                    Log.Logger.LogDebug($"No environment specified. Using base environment: {env.Name}");
                 }
                 else
                 {
@@ -290,7 +290,7 @@ namespace DotNetPythonBridge
                 "-d", wSL_Distro.Name,
                 "bash", "-c", $"test -f {escapedExe} && echo exists || echo missing"
             },
-            timeout: CondaManager.wsl_DistroDoesFileExistTimeout);
+            timeout: CondaManager._options.WSL_DistroDoesFileExistTimeout);
             //var checkResult = await ProcessHelper.RunProcess("wsl", $"-d {wSL_Distro.Name} {bashCmd}");
             //var checkResult = await ProcessHelper.RunProcess("wsl", $"-d {wSL_Distro.Name} bash -lic \"test -f {exe} && echo exists\"");
 

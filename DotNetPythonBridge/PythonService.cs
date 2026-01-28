@@ -31,7 +31,7 @@ namespace DotNetPythonBridge
         public static async Task<PythonService> Start(string scriptPath, PythonEnvironment? env = null, PythonServiceOptions? options = null,
             CancellationToken cancellationToken = default, TimeSpan? timeout = null)
         {
-            Log.Logger.LogInformation($"Starting Python service using environment: {(env != null ? env.Name : "Base")}, script: {scriptPath}");
+            Log.Logger.LogDebug($"Starting Python service using environment: {(env != null ? env.Name : "Base")}, script: {scriptPath}");
 
             options ??= new PythonServiceOptions(); // use default options if none provided
 
@@ -96,13 +96,13 @@ namespace DotNetPythonBridge
             CancellationToken cancellationToken = default,
             TimeSpan? timeout = null)
         {
-            Log.Logger.LogInformation(
+            Log.Logger.LogDebug(
                 $"Starting Python service using env: {env?.Name ?? "Base"}, script: {scriptPath}, WSL: {wsl?.Name ?? "None"}");
 
             if (wsl == null)
             {
                 wsl = await WSL_Helper.getDefaultWSL_Distro();
-                Log.Logger.LogInformation($"No WSL distro specified. Using default: {wsl.Name}");
+                Log.Logger.LogDebug($"No WSL distro specified. Using default: {wsl.Name}");
             }
 
             options ??= new PythonServiceOptions();
@@ -133,7 +133,7 @@ namespace DotNetPythonBridge
 
                 var service = new PythonService(proc, port, wsl);
 
-                Log.Logger.LogInformation(
+                Log.Logger.LogDebug(
                     $"Started Python service in WSL '{wsl.Name}' (PID: {service.Pid}) on port {port}");
 
                 // Optional health check
@@ -253,7 +253,6 @@ namespace DotNetPythonBridge
                     {
                         Log.Logger.LogWarning($"Process (PID: {Pid}) did not exit within {options.StopTimeoutMilliseconds} ms after kill.");
                     }
-                    Log.Logger.LogInformation($"Force killed Python service (PID: {Pid})");
                 }
 
                 // Dispose of the process and set it to null

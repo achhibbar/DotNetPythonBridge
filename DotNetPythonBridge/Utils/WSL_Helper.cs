@@ -60,7 +60,7 @@ namespace DotNetPythonBridge.Utils
                             distros.Distros.Add(new WSL_Distro(name, isDefault)); // add the distro to the list
                             // warm up the distro
                             await WarmupWSL_Distro(name, wslWarmupTimeout);
-                            Log.Logger.LogInformation($"Found WSL Distro: {name}, Default: {isDefault}");
+                            Log.Logger.LogDebug($"Found WSL Distro: {name}, Default: {isDefault}");
                         }
                     }
 
@@ -131,7 +131,7 @@ namespace DotNetPythonBridge.Utils
 
                 if (result.ExitCode == 0)
                 {
-                    Log.Logger.LogInformation($"WSL Distro {wslDistro.Name} is warmed up and ready.");
+                    Log.Logger.LogDebug($"WSL Distro {wslDistro.Name} is warmed up and ready.");
                     return result;
                 }
                 else

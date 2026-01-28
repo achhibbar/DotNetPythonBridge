@@ -6,9 +6,13 @@ namespace DotNetPythonBridge.Utils
     {
         private static ILogger? _logger;  // Static logger instance, shared across library
         private static ILoggerFactory? _loggerFactory; // Used to create logger
+        private static LogLevel _minimumLogLevel = LogLevel.Information; // Default log level
 
         // Optionally, allow users to set their own logger
         public static void SetLogger(ILogger logger) => _logger = logger;
+
+        // Optionally, allow users to set the minimum log level
+        public static void SetMinimumLogLevel(LogLevel logLevel) => _minimumLogLevel = logLevel;
 
         // Lazy-initialized logger factory
         private static ILoggerFactory LoggerFactory
@@ -24,7 +28,7 @@ namespace DotNetPythonBridge.Utils
                             options.SingleLine = true;
                             options.TimestampFormat = "[HH:mm:ss] ";
                         })
-                        .SetMinimumLevel(LogLevel.Information);
+                        .SetMinimumLevel(_minimumLogLevel);
                     });
                 }
                 return _loggerFactory;
