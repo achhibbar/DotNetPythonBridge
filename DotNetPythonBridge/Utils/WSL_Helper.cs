@@ -123,7 +123,7 @@ namespace DotNetPythonBridge.Utils
         {
             wslWarmupTimeout ??= options.WSL_WarmupTimeout; // use timeout from options if not provided
 
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < CondaManager._options.WSL_WarmpupRetries; i++)
             {
                 //string escapedDistroName = FilenameHelper.BashEscape(wslDistro.Name);
                 var result = await ProcessHelper.RunProcess("wsl", $"-d {wslDistro.Name} echo WSL Distro Warmed Up", timeout: wslWarmupTimeout);
@@ -140,7 +140,7 @@ namespace DotNetPythonBridge.Utils
                 }
 
                 // wait a bit before retrying
-                await Task.Delay(1000);
+                await Task.Delay(CondaManager._options.WSL_WarmupRetryDelay);
             }
 
             Log.Logger.LogError($"Failed to warm up WSL Distro {wslDistro.Name} after multiple attempts.");

@@ -370,7 +370,7 @@ namespace DotNetPythonBridge
                         bool foundValidOutput = false;
 
                         // ensure the output is not the welcome message, and if so, try again after a delay for up to 2 times
-                        for (int attempt = 0; attempt < 2; attempt++)
+                        for (int attempt = 0; attempt < _options.WSL_GetCondaPathRetries; attempt++)
                         {
                             if (result.ExitCode == 0 && !string.IsNullOrWhiteSpace(result.Output)) // only check output if command succeeded
                             {

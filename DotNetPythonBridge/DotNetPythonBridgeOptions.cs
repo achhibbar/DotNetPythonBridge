@@ -18,6 +18,9 @@ namespace DotNetPythonBridge
         public TimeSpan WSL_ListDistrosTimeout { get; set; } = TimeSpan.FromSeconds(10); // timeout for listing WSL distros
         public TimeSpan WSL_WarmupTimeout { get; set; } = TimeSpan.FromSeconds(5); // timeout for warming up WSL distro
         public TimeSpan WSL_DistroDoesFileExistTimeout { get; set; } = TimeSpan.FromSeconds(10); // timeout for checking if file exists in WSL distro
+        public TimeSpan WSL_WarmupRetryDelay { get; set; } = TimeSpan.FromSeconds(1); // delay after warming up WSL distro to allow it to settle
+        public int WSL_WarmpupRetries { get; set; } = 3; // number of times to retry warming up WSL distro
+        public int WSL_GetCondaPathRetries { get; set; } = 3; // number of times to retry getting conda path in WSL distro
 
 
         // Fluent helpers
