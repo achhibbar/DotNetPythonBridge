@@ -11,7 +11,6 @@ namespace DotNetPythonBridge.Utils
     public static class WSL_Helper
     {
         private static WSL_Distros? Distros = null;
-        private static readonly DotNetPythonBridgeOptions options = new DotNetPythonBridgeOptions();
 
         /// <summary>
         /// Get a list of all installed WSL distributions on the local machine.
@@ -21,8 +20,8 @@ namespace DotNetPythonBridge.Utils
         /// <exception cref="Exception"></exception>
         public static async Task<WSL_Distros> GetWSLDistros(bool refresh = false, TimeSpan? listDistrosTimeout = null, TimeSpan? wslWarmupTimeout = null)
         {
-            listDistrosTimeout ??= options.WSL_ListDistrosTimeout; // use timeout from options if not provided
-            wslWarmupTimeout ??= options.WSL_WarmupTimeout; // use timeout from options if not provided
+            listDistrosTimeout ??= CondaManager._options.WSL_ListDistrosTimeout; // use timeout from options if not provided
+            wslWarmupTimeout ??= CondaManager._options.WSL_WarmupTimeout; // use timeout from options if not provided
 
             // Return cached distros if already retrieved and refresh is not requested
             if (Distros != null && !refresh)
@@ -121,7 +120,7 @@ namespace DotNetPythonBridge.Utils
         /// <exception cref="Exception"></exception>
        public static async Task<PythonResult> WarmupWSL_Distro(WSL_Helper.WSL_Distro wslDistro, TimeSpan? wslWarmupTimeout = null)
         {
-            wslWarmupTimeout ??= options.WSL_WarmupTimeout; // use timeout from options if not provided
+            wslWarmupTimeout ??= CondaManager._options.WSL_WarmupTimeout; // use timeout from options if not provided
 
             for (int i = 0; i < CondaManager._options.WSL_WarmpupRetries; i++)
             {
@@ -155,7 +154,7 @@ namespace DotNetPythonBridge.Utils
         /// <returns></returns>
         public static async Task<PythonResult> WarmupWSL_Distro(string wslDistroName, TimeSpan? wslWarmupTimeout = null)
         {
-            wslWarmupTimeout ??= options.WSL_WarmupTimeout; // use timeout from options if not provided
+            wslWarmupTimeout ??= CondaManager._options.WSL_WarmupTimeout; // use timeout from options if not provided
 
             var wslDistro = new WSL_Helper.WSL_Distro(wslDistroName, false);
             return await WarmupWSL_Distro(wslDistro, wslWarmupTimeout);

@@ -41,6 +41,9 @@ namespace DotNetPythonBridge
         public DotNetPythonBridgeOptions WithWSLListDistrosTimeout(TimeSpan timeout) { WSL_ListDistrosTimeout = timeout; return this; }
         public DotNetPythonBridgeOptions WithWSLWarmpupTimeout(TimeSpan timeout) { WSL_WarmupTimeout = timeout; return this; }
         public DotNetPythonBridgeOptions WithWSLDistroDoesFileExistTimeout(TimeSpan timeout) { WSL_DistroDoesFileExistTimeout = timeout; return this; }
+        public DotNetPythonBridgeOptions WithWSLWarmpupRetryDelay(TimeSpan delay) { WSL_WarmupRetryDelay = delay; return this; }
+        public DotNetPythonBridgeOptions WithWSLWarmpupRetries(int retries) { WSL_WarmpupRetries = retries; return this; }
+        public DotNetPythonBridgeOptions WithWSLGetCondaPathRetries(int retries) { WSL_GetCondaPathRetries = retries; return this; }
 
         // return a WSL_Helper.WSL_Distro object if DefaultWSLDistro is set
         public async Task<Utils.WSL_Helper.WSL_Distro?> GetWSL_DistroAsync()
@@ -70,6 +73,8 @@ namespace DotNetPythonBridge
         public int HealthCheckTimeoutSeconds { get; set; } = 5; // seconds to wait for health check response
         public int ForceKillTimeoutMilliseconds { get; set; } = 500; // milliseconds to wait after sending kill signal before force killing when stopping the service
         public int StopTimeoutMilliseconds { get; set; } = 2000; // milliseconds to wait for service to stop gracefully
+        public int HealthCheckRetryDelayMilliseconds { get; set; } = 500; // milliseconds to wait between health check retries
+        public int ProcessStoppedCheckDelayMilliseconds { get; set; } = 200; // milliseconds to wait between checks when waiting for process to stop
 
         // Fluent helpers
         public PythonServiceOptions WithPort(int port) { DefaultPort = port; return this; }
@@ -79,5 +84,7 @@ namespace DotNetPythonBridge
         public PythonServiceOptions WithHealthCheckTimeout(int seconds) { HealthCheckTimeoutSeconds = seconds; return this; }
         public PythonServiceOptions WithForceKillTimeout(int milliseconds) { ForceKillTimeoutMilliseconds = milliseconds; return this; }
         public PythonServiceOptions WithStopTimeout(int milliseconds) { StopTimeoutMilliseconds = milliseconds; return this; }
+        public PythonServiceOptions WithHealthCheckRetryDelay(int milliseconds) { HealthCheckRetryDelayMilliseconds = milliseconds; return this; }
+        public PythonServiceOptions WithProcessStoppedCheckDelay(int milliseconds) { ProcessStoppedCheckDelayMilliseconds = milliseconds; return this; }
     }
 }

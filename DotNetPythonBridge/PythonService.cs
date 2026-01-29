@@ -191,7 +191,7 @@ namespace DotNetPythonBridge
 
                 try
                 {
-                    await Task.Delay(500, cancellationToken);
+                    await Task.Delay(options.HealthCheckRetryDelayMilliseconds, cancellationToken);
                 }
                 catch (OperationCanceledException)
                 {
@@ -236,7 +236,7 @@ namespace DotNetPythonBridge
                             return true;
                         }
                     }
-                    await Task.Delay(100);
+                    await Task.Delay(options.ProcessStoppedCheckDelayMilliseconds);
                 }
 
                 // _process is still running after timeout, force kill
