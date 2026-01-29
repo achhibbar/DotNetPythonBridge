@@ -211,18 +211,24 @@ namespace DotNetPythonBridge
         public async Task<bool> Stop(PythonServiceOptions? options = null)
         {
             options ??= new PythonServiceOptions();
+            bool shutdownRequestSent = false;
             try
             {
                 var url = $"http://localhost:{Port}/shutdown";
                 try
                 {
                     await client.GetAsync(url);
-                    Log.Logger.LogInformation($"Sent shutdown request to Python service (PID: {Pid}) on port {Port}");
+                    shutdownRequestSent = true;
                 }
                 catch
                 {
+                    // Only log if shutdown request fails
                     Log.Logger.LogWarning($"Failed to send shutdown request to Python service (PID: {Pid}) on port {Port}");
                 }
+
+                // Only log once for shutdown request
+                if (shutdownRequestSent)
+                    Log.Logger.LogInformation($"Sent shutdown request to Python service (PID: {Pid}) on port {Port}");
 
                 // poll for exit using options.ForceKillTimeoutMilliseconds as total timeout
                 var sw = Stopwatch.StartNew();
