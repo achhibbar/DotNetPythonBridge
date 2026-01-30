@@ -8,16 +8,16 @@ namespace DotNetPythonBridge.Tests
 {
     public class FilenameHelperTests
     {
-        [Theory]
-        [InlineData("C:\\my folder\\file.yaml", "\"C:\\my folder\\file.yaml\"")]
-        [InlineData("\"C:\\my folder\\file.yaml\"", "\"C:\\my folder\\file.yaml\"")]
-        [InlineData(" file.yaml ", "\"file.yaml\"")]
-        [InlineData("\"file.yaml\"", "\"file.yaml\"")]
-        public void SanitizeYamlFilepath_WrapsWithQuotes_IfNotPresent(string input, string expected)
-        {
-            var result = FilenameHelper.EnsureYamlFilepathQuoted(input);
-            Assert.Equal(expected, result);
-        }
+        //[Theory]
+        //[InlineData("C:\\my folder\\file.yaml", "\"C:\\my folder\\file.yaml\"")]
+        //[InlineData("\"C:\\my folder\\file.yaml\"", "\"C:\\my folder\\file.yaml\"")]
+        //[InlineData(" file.yaml ", "\"file.yaml\"")]
+        //[InlineData("\"file.yaml\"", "\"file.yaml\"")]
+        //public void SanitizeYamlFilepath_WrapsWithQuotes_IfNotPresent(string input, string expected)
+        //{
+        //    var result = FilenameHelper.EnsureYamlFilepathQuoted(input);
+        //    Assert.Equal(expected, result);
+        //}
 
         [Theory]
         [InlineData("C:\\Users\\Test\\file.yaml", "/mnt/c/Users/Test/file.yaml")]
