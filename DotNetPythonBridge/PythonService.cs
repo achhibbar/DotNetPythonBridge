@@ -9,6 +9,38 @@ using Microsoft.Extensions.Options;
 
 namespace DotNetPythonBridge
 {
+    /// <summary>
+    /// Wrapper handle for managing the lifecycle of a PythonService.
+    /// </summary>
+    public class PythonServiceHandle : IAsyncDisposable, IDisposable
+    {
+        /// <summary>
+        /// The underlying Python service.
+        /// </summary>
+        public PythonService Service { get; }
+
+        /// <summary>
+        /// Handle for managing the lifecycle of a PythonService.
+        /// </summary>
+        /// <param name="service"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        public PythonServiceHandle(PythonService? service)
+        {
+            Service = service ?? throw new ArgumentNullException(nameof(service));
+        }
+
+        /// <summary>
+        /// Dispose the underlying Python service.
+        /// </summary>
+        public void Dispose() => Service?.Dispose();
+
+        /// <summary>
+        /// Asynchronously dispose the underlying Python service.
+        /// </summary>
+        /// <returns></returns>
+        public async ValueTask DisposeAsync() => await (Service?.DisposeAsync() ?? ValueTask.CompletedTask);
+    }
+
     public class PythonService : IDisposable, IAsyncDisposable
     {
         private Process _process;
@@ -25,10 +57,8 @@ namespace DotNetPythonBridge
             _wsl = wsl;
         }
 
-        /// <summary>
-        /// Start a long-running Python service inside the given conda environment.
-        /// </summary>
-        public static async Task<PythonService> Start(string scriptPath, PythonEnvironment? env = null, PythonServiceOptions? options = null,
+
+        public static async Task<PythonServiceHandle> Start(string scriptPath, PythonEnvironment? env = null, PythonServiceOptions? options = null,
             CancellationToken cancellationToken = default, TimeSpan? timeout = null)
         {
             Log.Logger.LogDebug($"Starting Python service using environment: {(env != null ? env.Name : "Base")}, script: {scriptPath}");
@@ -73,10 +103,11 @@ namespace DotNetPythonBridge
                     continue; // try again
                 }
                 Log.Logger.LogInformation($"Python service (PID: {service.Pid}) is healthy on port {service.Port}");
-                return service;
+                return new PythonServiceHandle(service);
             }
             throw new InvalidOperationException($"Python service failed to become healthy after {options.ServiceRetryCount} attempts.");
         }
+
 
         /// <summary>
         /// Start a long-running Python service inside the given conda environment.
@@ -88,7 +119,7 @@ namespace DotNetPythonBridge
         /// <returns></returns>
         /// <exception cref="FileNotFoundException"></exception>
         /// <exception cref="Exception"></exception>
-        public static async Task<PythonService> StartWSL(
+        public static async Task<PythonServiceHandle> StartWSL(
             string scriptPath,
             PythonEnvironment? env = null,
             PythonServiceOptions? options = null,
@@ -148,7 +179,7 @@ namespace DotNetPythonBridge
                 Log.Logger.LogInformation(
                     $"Python service (PID: {service.Pid}) is healthy on port {port}");
 
-                return service;
+                return new PythonServiceHandle(service);
             }
             throw new InvalidOperationException($"Python service failed to become healthy after {options.ServiceRetryCount} attempts.");
         }

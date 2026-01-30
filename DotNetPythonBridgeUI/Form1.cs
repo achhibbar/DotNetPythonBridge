@@ -13,6 +13,9 @@ namespace DotNetPythonBridgeUI
         private bool isCondaInitialized = false;
         private WSL_Helper.WSL_Distros? distros = null;
 
+        private PythonServiceHandle? winPyService;
+        private PythonServiceHandle? wslPyService;
+
         public Form1()
         {
             InitializeComponent();
@@ -256,8 +259,16 @@ namespace DotNetPythonBridgeUI
 
         private async void btnPythonRunner_Click(object sender, EventArgs e)
         {
+            bool stopped = false;
+
             if (!checkBoxWSL.Checked) // run in windows
             {
+                if (winPyService != null) // dispose existing service first
+                {
+                    await winPyService.DisposeAsync();
+                    winPyService = null;
+                }
+
                 //get a specific env
                 var env = await CondaManager.GetEnvironment("SimpleITK_OpenCV_env");
                 //get the python executable path
@@ -268,8 +279,8 @@ namespace DotNetPythonBridgeUI
                 // start a python service in windows using the env
                 rtbPythonBridge.Text += "Starting Python Service in Windows..." + Environment.NewLine;
                 string serviceFilePath = @"F:\Ash docs\BTBP\c#\Ash projects\DotNetPythonBridgeUI\TestService.py";
-                var winPyService = await PythonService.Start(serviceFilePath, env);
-                rtbPythonBridge.Text += $"Python Service started in Windows on port {winPyService.Port}" + Environment.NewLine;
+                winPyService = await PythonService.Start(serviceFilePath, env);
+                rtbPythonBridge.Text += $"Python Service started in Windows on port {winPyService.Service.Port}" + Environment.NewLine;
                 rtbPythonBridge.Text += Environment.NewLine;
 
                 //run a python script in windows using the env
@@ -293,16 +304,28 @@ namespace DotNetPythonBridgeUI
                 rtbPythonBridge.Text += Environment.NewLine;
 
                 // check the health of the python service
-                bool healthy = await winPyService.WaitForHealthCheck(serviceOptions);
+                bool healthy = await winPyService.Service.WaitForHealthCheck(serviceOptions);
                 rtbPythonBridge.Text += "Python Service Health Check: " + healthy.ToString() + Environment.NewLine;
 
                 //stop the windows service
-                bool stopped = await winPyService.Stop();
+                if (winPyService != null)
+                {
+                    await winPyService.DisposeAsync();
+                    winPyService = null;
+                    stopped = true;
+                }
+
                 rtbPythonBridge.Text += "Python Service in Windows stopped." + Environment.NewLine;
                 rtbPythonBridge.Text += Environment.NewLine;
             }
             else // run in wsl
             {
+                if (wslPyService != null) // dispose existing service first
+                {
+                    await wslPyService.DisposeAsync();
+                    wslPyService = null;
+                }
+
                 // get a specific env in wsl
                 WSL_Distros distros = await WSL_Helper.GetWSLDistros();
                 var defaultDistro = distros.GetDefaultDistro();
@@ -355,22 +378,27 @@ namespace DotNetPythonBridgeUI
                     rtbPythonBridge.Text += "No default WSL distro found. Cannot run code in WSL." + Environment.NewLine;
                 }
 
-                //start a python service in wsl using the env
-                PythonService wslPyService;
                 if (defaultDistro != null)
                 {
                     var env = await CondaManager.GetEnvironmentWSL("SimpleITK_OpenCV_env", defaultDistro);
                     string serviceFilePath = @"F:\Ash docs\BTBP\c#\Ash projects\DotNetPythonBridgeUI\TestService.py";
                     rtbPythonBridge.Text += "Starting Python Service in WSL..." + Environment.NewLine;
                     wslPyService = await PythonService.StartWSL(serviceFilePath, env, wsl: defaultDistro);
-                    rtbPythonBridge.Text += $"Python Service started in WSL on port {wslPyService.Port}" + Environment.NewLine;
+                    rtbPythonBridge.Text += $"Python Service started in WSL on port {wslPyService.Service.Port}" + Environment.NewLine;
                     rtbPythonBridge.Text += Environment.NewLine;
 
                     // check the health of the python service
-                    var healthy = await wslPyService.WaitForHealthCheck(serviceOptions);
+                    var healthy = await wslPyService.Service.WaitForHealthCheck(serviceOptions);
                     rtbPythonBridge.Text += "Python Service Health Check in WSL: " + healthy.ToString() + Environment.NewLine;
 
-                    var stopped = await wslPyService.Stop();
+                    //stop the wsl service
+                    if (wslPyService != null)
+                    {
+                        await wslPyService.DisposeAsync();
+                        wslPyService = null;
+                        stopped = true;
+                    }
+
                     rtbPythonBridge.Text += "Python Service in WSL stopped." + Environment.NewLine;
                     rtbPythonBridge.Text += Environment.NewLine;
                 }
@@ -479,10 +507,15 @@ namespace DotNetPythonBridgeUI
             CancellationTokenSource cts = new CancellationTokenSource(100000); // cancel after 100 seconds
             CancellationToken token = cts.Token;
             TimeSpan timeout = TimeSpan.FromSeconds(300); // set a timeout of 300 seconds
+            bool stopped = false;
 
             if (!checkBoxWSL.Checked) // run in windows
             {
-
+                if (winPyService != null) // dispose existing service first
+                {
+                    await winPyService.DisposeAsync();
+                    winPyService = null;
+                }
 
                 // Start and stop a python service using lazy initialization
                 // start a python service in windows using the env
@@ -490,36 +523,53 @@ namespace DotNetPythonBridgeUI
                 string serviceFilePath = @"F:\Ash docs\BTBP\c#\Ash projects\DotNetPythonBridgeUI\TestService.py";
                 var env = await CondaManager.GetEnvironment("SimpleITK_OpenCV_env");
                 // no env provided, will use lazy init by using the base conda env
-                var winPyService = await PythonService.Start(serviceFilePath, env, cancellationToken: token, timeout: timeout);
-                rtbPythonBridge.Text += $"Python Service started in Windows on port {winPyService.Port}" + Environment.NewLine;
+                winPyService = await PythonService.Start(serviceFilePath, env, cancellationToken: token, timeout: timeout);
+                rtbPythonBridge.Text += $"Python Service started in Windows on port {winPyService.Service.Port}" + Environment.NewLine;
                 rtbPythonBridge.Text += Environment.NewLine;
 
                 // check the health of the python service
-                bool healthy = await winPyService.WaitForHealthCheck(serviceOptions);
+                bool healthy = await winPyService.Service.WaitForHealthCheck(serviceOptions);
                 rtbPythonBridge.Text += "Python Service Health Check: " + healthy.ToString() + Environment.NewLine;
 
                 //stop the windows service
-                bool stopped = await winPyService.Stop();
+                if (winPyService != null)
+                {
+                    await winPyService.DisposeAsync();
+                    winPyService = null;
+                    stopped = true;
+                }
+                
                 // report stopping based on bool result
                 rtbPythonBridge.Text += stopped ? "Python Service in Windows stopped successfully." + Environment.NewLine : "Failed to stop Python Service in Windows." + Environment.NewLine;
                 rtbPythonBridge.Text += Environment.NewLine;
             }
             else // run in wsl
             {
-                PythonService wslPyService;
+                if (wslPyService != null) // dispose existing service first
+                {
+                    await wslPyService.DisposeAsync();
+                    wslPyService = null;
+                }
+
                 string serviceFilePath = @"F:\Ash docs\BTBP\c#\Ash projects\DotNetPythonBridgeUI\TestService.py";
                 rtbPythonBridge.Text += "Starting Python Service in WSL..." + Environment.NewLine;
                 var env = await CondaManager.GetEnvironmentWSL("SimpleITK_OpenCV_env");
                 // no env or distro provided, will use lazy init by using the base conda env in default wsl distro
                 wslPyService = await PythonService.StartWSL(serviceFilePath, env, cancellationToken: token, timeout: timeout); 
-                rtbPythonBridge.Text += $"Python Service started in WSL on port {wslPyService.Port}" + Environment.NewLine;
+                rtbPythonBridge.Text += $"Python Service started in WSL on port {wslPyService.Service.Port}" + Environment.NewLine;
                 rtbPythonBridge.Text += Environment.NewLine;
 
                 // check the health of the python service
-                var healthy = await wslPyService.WaitForHealthCheck(serviceOptions);
+                var healthy = await wslPyService.Service.WaitForHealthCheck(serviceOptions);
                 rtbPythonBridge.Text += "Python Service Health Check in WSL: " + healthy.ToString() + Environment.NewLine;
 
-                var stopped = await wslPyService.Stop();
+                //stop the wsl service
+                if (wslPyService != null)
+                {
+                    await wslPyService.DisposeAsync();
+                    wslPyService = null;
+                    stopped = true;
+                }
                 rtbPythonBridge.Text += "Python Service in WSL stopped." + Environment.NewLine;
                 rtbPythonBridge.Text += Environment.NewLine;
             }
