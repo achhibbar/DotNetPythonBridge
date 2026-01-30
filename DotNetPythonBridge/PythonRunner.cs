@@ -13,7 +13,7 @@ namespace DotNetPythonBridge
         /// If wSL_Distro is provided, runs inside the specified WSL distribution.
         /// </summary>
         public static async Task<PythonResult> RunScript(string scriptPath, PythonEnvironment? env = null, string[]? arguments = null,
-    CancellationToken cancellationToken = default, TimeSpan? timeout = null)
+            CancellationToken cancellationToken = default, TimeSpan? timeout = null)
         {
             // Log the execution details, handle null env
             Log.Logger.LogDebug($"Running script: {scriptPath} with arguments: {arguments} in environment: {(env != null ? env.Name : "Base")}");

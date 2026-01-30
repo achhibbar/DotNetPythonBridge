@@ -17,7 +17,7 @@ namespace DotNetPythonBridge.Utils
         /// Get a free TCP port on the local machine.
         /// </summary>
         /// <returns></returns>
-        public static int GetFreePort()
+        internal static int GetFreePort()
         {
             Log.Logger.LogInformation("Searching for a free TCP port...");
 
@@ -43,7 +43,7 @@ namespace DotNetPythonBridge.Utils
             return listener;
         }
 
-        public static bool checkIfPortIsFree(int port)
+        internal static bool checkIfPortIsFree(int port)
         {
             Log.Logger.LogInformation($"Checking if port {port} is free...");
 
@@ -74,7 +74,7 @@ namespace DotNetPythonBridge.Utils
             return isFree;
         }
 
-        public class ReservedPort
+        internal class ReservedPort
         {
             public TcpListener Listener { get; }
             public int Port { get; }
@@ -92,7 +92,7 @@ namespace DotNetPythonBridge.Utils
             }
         }
 
-        public static ReservedPort ReservePort(int port = 0)
+        internal static ReservedPort ReservePort(int port = 0)
         {
             if (port == 0) // find and reserve a free port
             {

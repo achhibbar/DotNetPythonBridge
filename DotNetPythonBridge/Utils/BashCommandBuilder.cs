@@ -45,19 +45,19 @@ namespace DotNetPythonBridge.Utils
                         .Replace(" ", "\\ "); // Escape spaces
         }
 
-            /// <summary>
-            /// for launching service via bash -lc '...'
-            /// </summary>
-            /// <param name="pythonExe"></param>
-            /// <param name="wslScriptPath"></param>
-            /// <param name="port"></param>
-            /// <param name="options"></param>
-            /// <returns></returns>
-            internal static string BuildBashStartServiceCommand(
-        string pythonExe,
-        string wslScriptPath,
-        int port,
-        PythonServiceOptions options)
+        /// <summary>
+        /// for launching service via bash -lc '...'
+        /// </summary>
+        /// <param name="pythonExe"></param>
+        /// <param name="wslScriptPath"></param>
+        /// <param name="port"></param>
+        /// <param name="options"></param>
+        /// <returns></returns>
+        internal static string BuildBashStartServiceCommand(
+            string pythonExe,
+            string wslScriptPath,
+            int port,
+            PythonServiceOptions options)
         {
             var args = new List<string>
             {
@@ -124,7 +124,7 @@ namespace DotNetPythonBridge.Utils
         /// <param name="condaPath"></param>
         /// <param name="args"></param>
         /// <returns></returns>
-        public static string BuildBashCondaCommand(string condaPath, string args)
+        internal static string BuildBashCondaCommand(string condaPath, string args)
         {
             return $"{BashEscape(condaPath)} {args}";
         }
@@ -136,7 +136,7 @@ namespace DotNetPythonBridge.Utils
         /// <param name="yamlFile">The path to the YAML file.</param>
         /// <param name="envName">Optional environment name to override the YAML.</param>
         /// <returns>A bash command string suitable for use with WSL.</returns>
-        public static string BuildBashCreateCondaEnvCmd(string condaPath, string yamlFile, string? envName = null)
+        internal static string BuildBashCreateCondaEnvCmd(string condaPath, string yamlFile, string? envName = null)
         {
             string escapedCondaPath = BashEscape(condaPath);
             string escapedYamlFile = BashEscape(yamlFile);
@@ -152,7 +152,7 @@ namespace DotNetPythonBridge.Utils
             }
         }
 
-        public static string BuildBashDeleteCondaEnvCmd(string condaPath, string envName)
+        internal static string BuildBashDeleteCondaEnvCmd(string condaPath, string envName)
         {
             string escapedCondaPath = BashEscape(condaPath);
             string escapedEnvName = BashEscape(envName);

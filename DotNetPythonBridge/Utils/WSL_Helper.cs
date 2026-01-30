@@ -10,6 +10,8 @@ namespace DotNetPythonBridge.Utils
 {
     public static class WSL_Helper
     {
+        // Lock object for thread-safe initialization
+        private static readonly object _initLock = new object();
         private static WSL_Distros? Distros = null;
 
         /// <summary>
@@ -34,7 +36,8 @@ namespace DotNetPythonBridge.Utils
                 throw new PlatformNotSupportedException("WSL is only available on Windows 10/11.");
             }
 
-            Distros = null; // reset cached distros
+            //Distros = null; // reset cached distros
+            SetDistros(null); // thread-safe reset cached distros
 
             try
             {
@@ -64,7 +67,8 @@ namespace DotNetPythonBridge.Utils
                     }
 
                     // Cache the retrieved distros and return
-                    Distros = distros;
+                    //Distros = distros;
+                    SetDistros(distros); // thread-safe set cached distros
                     return distros;
                 }
             }
@@ -176,6 +180,15 @@ namespace DotNetPythonBridge.Utils
                     throw new InvalidOperationException("No WSL distribution specified and no default WSL distribution found in CondaManager.");
             }
 
+        }
+
+        //thread-safe method to set Distros
+        private static void SetDistros(WSL_Distros? distros)
+        {
+            lock (_initLock)
+            {
+                Distros = distros;
+            }
         }
 
     }
