@@ -102,7 +102,7 @@ namespace DotNetPythonBridge
                     // warm up the WSL distro before setting the path
                     if (_options.DefaultWSLDistro != null)
                     {
-                        var rslt = await WSL_Helper.WarmupWSL_Distro(_options.DefaultWSLDistro, _options.WSL_WarmupTimeout);
+                        var rslt = await WSL_Helper.WarmupWSL_Distro(_options.DefaultWSLDistro, _options.WSLWarmupTimeout);
                         if (rslt.ExitCode != 0)
                         {
                             Log.Logger.LogError($"Failed to warm up WSL Distro {_options.DefaultWSLDistro}: {rslt.Error}");
@@ -335,7 +335,7 @@ namespace DotNetPythonBridge
 
                 // since _WSL_condaPath is not set, this is the first time we are trying to find it in WSL
                 // so this distro may need to be warmed up first
-                var rslt = await WSL_Helper.WarmupWSL_Distro(wSL_Distro, _options.WSL_WarmupTimeout);
+                var rslt = await WSL_Helper.WarmupWSL_Distro(wSL_Distro, _options.WSLWarmupTimeout);
                 if (rslt.ExitCode != 0)
                 {
                     Log.Logger.LogError($"Failed to warm up WSL Distro {wSL_Distro.Name}: {rslt.Error}");
@@ -370,7 +370,7 @@ namespace DotNetPythonBridge
                         bool foundValidOutput = false;
 
                         // ensure the output is not the welcome message, and if so, try again after a delay for up to 2 times
-                        for (int attempt = 0; attempt < _options.WSL_GetCondaPathRetries; attempt++)
+                        for (int attempt = 0; attempt < _options.WSLGetCondaPathRetries; attempt++)
                         {
                             if (result.ExitCode == 0 && !string.IsNullOrWhiteSpace(result.Output)) // only check output if command succeeded
                             {

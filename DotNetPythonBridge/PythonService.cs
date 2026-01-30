@@ -195,9 +195,9 @@ namespace DotNetPythonBridge
             var sw = Stopwatch.StartNew();
 
             // Use a per-request timeout (e.g., 2 seconds per request)
-            var perRequestTimeout = TimeSpan.FromSeconds(Math.Min(2, options.HealthCheckTimeoutSeconds));
+            var perRequestTimeout = TimeSpan.FromSeconds(Math.Min(2, options.HealthCheckTimeout.TotalSeconds));
 
-            while (sw.Elapsed.TotalSeconds < options.HealthCheckTimeoutSeconds)
+            while (sw.Elapsed.TotalSeconds < options.HealthCheckTimeout.TotalSeconds)
             {
                 try
                 {
@@ -222,7 +222,7 @@ namespace DotNetPythonBridge
 
                 try
                 {
-                    await Task.Delay(options.HealthCheckRetryDelayMilliseconds, cancellationToken);
+                    await Task.Delay(options.HealthCheckRetryDelay, cancellationToken);
                 }
                 catch (OperationCanceledException)
                 {
@@ -230,7 +230,7 @@ namespace DotNetPythonBridge
                 }
             }
 
-            Log.Logger.LogError($"Python service (PID: {Pid}) failed health check on port {Port} after {options.HealthCheckTimeoutSeconds} seconds.");
+            Log.Logger.LogError($"Python service (PID: {Pid}) failed health check on port {Port} after {options.HealthCheckTimeout.TotalSeconds} seconds.");
             return false;
         }
 
@@ -263,7 +263,7 @@ namespace DotNetPythonBridge
 
                 // poll for exit using options.ForceKillTimeoutMilliseconds as total timeout
                 var sw = Stopwatch.StartNew();
-                while (sw.Elapsed.TotalMilliseconds < options.ForceKillTimeoutMilliseconds)
+                while (sw.Elapsed.TotalMilliseconds < options.HealthCheckTimeout.TotalSeconds)
                 {
                     if (_process == null || _process.HasExited ) // check if process has exited
                     {
@@ -273,7 +273,7 @@ namespace DotNetPythonBridge
                             return true;
                         }
                     }
-                    await Task.Delay(options.ProcessStoppedCheckDelayMilliseconds);
+                    await Task.Delay(options.ProcessStoppedCheckDelay);
                 }
 
                 // _process is still running after timeout, force kill
@@ -282,13 +282,13 @@ namespace DotNetPythonBridge
                     _process.Kill(entireProcessTree: true);
                     
                     var waitTask = _process.WaitForExitAsync();
-                    if (await Task.WhenAny(waitTask, Task.Delay(options.StopTimeoutMilliseconds)) == waitTask) // wait for exit with timeout
+                    if (await Task.WhenAny(waitTask, Task.Delay(options.StopTimeout)) == waitTask) // wait for exit with timeout
                     {
                         Log.Logger.LogInformation($"Force killed Python service (PID: {Pid})");
                     }
                     else // timeout
                     {
-                        Log.Logger.LogWarning($"Process (PID: {Pid}) did not exit within {options.StopTimeoutMilliseconds} ms after kill.");
+                        Log.Logger.LogWarning($"Process (PID: {Pid}) did not exit within {options.StopTimeout.TotalMilliseconds} ms after kill.");
                     }
                 }
 
