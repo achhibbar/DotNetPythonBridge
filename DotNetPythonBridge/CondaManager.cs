@@ -42,8 +42,13 @@ namespace DotNetPythonBridge
         public static PythonEnvironments? PythonEnvironmentsWSL { get; private set; } = null; // all conda environments in WSL
 
         /// <summary>
-        /// Initialize CondaManager with optional paths.
+        /// Initialize the CondaManager with optional conda path and WSL settings.
         /// </summary>
+        /// <param name="options"></param>
+        /// <param name="reinitialize"></param>
+        /// <returns></returns>
+        /// <exception cref="FileNotFoundException"></exception>
+        /// <exception cref="InvalidOperationException"></exception>
         public static async Task Initialize(DotNetPythonBridgeOptions? options = null, bool reinitialize = false)
         { 
             if (_isInitialized && !reinitialize) // already initialized and no reinit requested
@@ -113,7 +118,6 @@ namespace DotNetPythonBridge
                         // convert the windows path to WSL path and build the which command
                         string bashCommand = BashCommandBuilder.BuildBashWhichCommand(FilenameHelper.convertWindowsPathToWSL(_options.DefaultWSLCondaPath));
                         // confirm the conda path exists in the warmed up distro
-                        //var whichResult = await ProcessHelper.RunProcess("wsl", $"-d {_options.DefaultWSLDistro} {bashCommand}");
                         var whichResult = await ProcessHelper.RunProcess("wsl", new[] { "-d", _options.DefaultWSLDistro, "bash", "-lic", bashCommand },
                             timeout: _options.CondaWhichTimeout);
 
@@ -126,8 +130,6 @@ namespace DotNetPythonBridge
 
                     updateWSLCondaPath(_options.DefaultWSLCondaPath); // set the wsl conda path and distro with a lock
                     updateWSLDistroName(_options.DefaultWSLDistro); // set the wsl distro name with a lock
-                    //_WSL_condaPath = _options.DefaultWSLCondaPath;
-                    //_WSL_distroName = _options.DefaultWSLDistro;
 
                     // get all the conda/mamba envs in WSL, if reinitialize is true, force refresh
                     await ListEnvironmentsWSL(WSL, refresh: reinitialize);
@@ -135,7 +137,6 @@ namespace DotNetPythonBridge
                 else if (_options.DefaultWSLDistro != null) // if only wsl distro is provided, attempt to auto-detect conda/mamba path in that distro
                 {
                     updateWSLDistroName(_options.DefaultWSLDistro); // set the wsl distro name with a lock
-                    //_WSL_distroName = _options.DefaultWSLDistro;
 
                     try
                     {
@@ -161,7 +162,6 @@ namespace DotNetPythonBridge
 
                 }
 
-                //_isInitialized = true;
                 updateIsInitialized(true); // set the isInitialized flag with a lock
             }
             else // if no _options provided, attempt to auto-detect conda/mamba path. Lazy initialization
@@ -204,12 +204,14 @@ namespace DotNetPythonBridge
                     Log.Logger.LogInformation("No default WSL distro found, skipping WSL conda/mamba auto-detection.");
                 }
 
-                //_isInitialized = true;
                 updateIsInitialized(true); // set the isInitialized flag with a lock
             }
             
         }
 
+        /// <summary>
+        /// Reset the CondaManager to uninitialized state.
+        /// </summary>
         public static void Reset()
         {
             Log.Logger.LogInformation("Resetting CondaManager...");
@@ -223,7 +225,12 @@ namespace DotNetPythonBridge
             updateOptions(new DotNetPythonBridgeOptions()); // reset options to default
         }
 
-        public static async Task<string> GetCondaOrMambaPath()
+        /// <summary>
+        /// Get the conda or mamba executable path.
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="FileNotFoundException"></exception>
+        internal static async Task<string> GetCondaOrMambaPath()
         {
             Log.Logger.LogInformation("Getting Conda or Mamba path...");
 
@@ -303,7 +310,6 @@ namespace DotNetPythonBridge
                 if (File.Exists(candidate))
                 {
                     updateCondaPath(candidate);
-                    //_condaPath = candidate;
                     Log.Logger.LogDebug($"Found conda/mamba at: {_condaPath}");
                     return _condaPath;
                 }
@@ -313,7 +319,14 @@ namespace DotNetPythonBridge
             throw new FileNotFoundException("Unable to locate conda or mamba. Please call CondaManager.Initialize(path) with the full path.");
         }
 
-        public static async Task<string> GetCondaOrMambaPathWSL(WSL_Helper.WSL_Distro? wSL_Distro = null)
+        /// <summary>
+        /// Get the conda or mamba executable path in WSL.
+        /// </summary>
+        /// <param name="wSL_Distro"></param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        /// <exception cref="FileNotFoundException"></exception>
+        internal static async Task<string> GetCondaOrMambaPathWSL(WSL_Helper.WSL_Distro? wSL_Distro = null)
         {
             Log.Logger.LogDebug($"Getting Conda or Mamba path for WSL Distro: {(wSL_Distro != null ? wSL_Distro.Name : "None")}");
 
@@ -349,20 +362,11 @@ namespace DotNetPythonBridge
                 {
                     try
                     {
-                        //string escapedExe = FilenameHelper.BashEscape(exe); // escape any special chars in the exe name for bash
                         string bashCommand = BashCommandBuilder.BuildBashWhichCommand(exe);
-                        //string bashCommand = $"which {escapedExe}";
-                        //string args = string.IsNullOrEmpty(wSL_Distro.Name)
-                        //    ? $"bash -lic {FilenameHelper.BashEscape(bashCommand)}"
-                        //    : $"-d {wSL_Distro.Name} bash -lic {FilenameHelper.BashEscape(bashCommand)}";
 
                         string[] args = string.IsNullOrEmpty(wSL_Distro.Name)
                             ? new[] { "bash", "-lic", bashCommand }
                             : new[] { "-d", wSL_Distro.Name, "bash", "-lic", bashCommand };
-
-                        //string args = string.IsNullOrEmpty(wSL_Distro.Name)
-                        //    ? $"bash -lic \"which {escapedExe}\"" // if no distro is specified, run in default distro
-                        //    : $"-d {wSL_Distro.Name} bash -lic \"which {escapedExe}\""; // if distro is specified, use -d to run in that distro, otherwise run in default distro
 
                         var result = await ProcessHelper.RunProcess("wsl", args, timeout: _options.CondaWhichTimeout);
 
@@ -409,7 +413,6 @@ namespace DotNetPythonBridge
                             if (!string.IsNullOrEmpty(candidate))
                             {
                                 updateWSLCondaPath(candidate);
-                                //_WSL_condaPath = candidate;
                                 Log.Logger.LogDebug($"Found conda/mamba in WSL at: {_WSL_condaPath}");
                                 return _WSL_condaPath;
                             }
@@ -459,8 +462,11 @@ namespace DotNetPythonBridge
         }
 
         /// <summary>
-        /// List all conda environments (parsed from conda info --json).
+        /// Get the list of conda environments (parsed from conda info --json).
         /// </summary>
+        /// <param name="refresh"></param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
         public static async Task<IEnumerable<PythonEnvironment>> ListEnvironments(bool refresh = false)
         {
             Log.Logger.LogDebug(CondaPath != null ? $"Listing conda environments using {CondaPath}" : "Listing conda environments...");
@@ -485,7 +491,6 @@ namespace DotNetPythonBridge
             if (doc.RootElement.TryGetProperty("default_prefix", out var rootEnvPath) && doc.RootElement.GetProperty("default_prefix").ValueKind != JsonValueKind.Null)
             {
                 string rootPath = rootEnvPath.GetString() ?? "";
-                //string rootName = Path.GetFileName(rootPath);
                 envs.Add(new PythonEnvironment("base", rootPath));
                 Log.Logger.LogDebug($"Found root environment: base at {rootPath}");
             }
@@ -514,14 +519,17 @@ namespace DotNetPythonBridge
                 Log.Logger.LogWarning("envs not found or is null in conda info output.");
             }
 
-            //PythonEnvironments = new PythonEnvironments { Environments = envs };
             updatePythonEnvironments(new PythonEnvironments { Environments = envs }); // set the python environments with a lock
             return envs;
         }
 
         /// <summary>
-        /// List all conda environments (parsed from conda info --json).
+        /// Get the list of conda environments in WSL (parsed from conda info --json).
         /// </summary>
+        /// <param name="wslDistro"></param>
+        /// <param name="refresh"></param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
         public static async Task<IEnumerable<PythonEnvironment>> ListEnvironmentsWSL(WSL_Helper.WSL_Distro? wslDistro = null, bool refresh = false)
         {
             Log.Logger.LogDebug($"Listing conda environments for WSL Distro: {(wslDistro != null ? wslDistro.Name : "None")}");
@@ -541,11 +549,6 @@ namespace DotNetPythonBridge
                 string buildBashCondaCommand = BashCommandBuilder.BuildBashCondaCommand(await GetCondaOrMambaPathWSL(wslDistro), "info --json"); //%
                 var result = await ProcessHelper.RunProcess("wsl", new[] { "-d", wslDistro.Name, "bash", "-lic", buildBashCondaCommand },
                     timeout: _options.CondaListEnvironmentsTimeout);
-
-                //string escapedCondaPath = FilenameHelper.BashEscape(await GetCondaOrMambaPathWSL(wslDistro)); // escape any special chars in the conda path for bash
-                //string bashCommand = $"bash -lic \"{escapedCondaPath} info --json\""; // use bash -lic to properly source the environment in WSL
-
-                //var result = await ProcessHelper.RunProcess("wsl", $"-d {wslDistro.Name} {bashCommand}");
 
                 if (result.ExitCode != 0)
                 {
@@ -588,7 +591,6 @@ namespace DotNetPythonBridge
                     Log.Logger.LogWarning("envs not found or is null in conda info output.");
                 }
 
-                //PythonEnvironmentsWSL = new PythonEnvironments { Environments = envs };
                 updatePythonEnvironmentsWSL(new PythonEnvironments { Environments = envs }); // set the python environments with a lock
                 return envs;
             }
@@ -614,9 +616,12 @@ namespace DotNetPythonBridge
         }
 
         /// <summary>
-        /// Get a specific environment by name.
+        /// Get a specific Conda environment by name.
         /// Returns a PythonEnvironment object if found, which includes the path to the environment.
         /// </summary>
+        /// <param name="envName"></param>
+        /// <returns></returns>
+        /// <exception cref="KeyNotFoundException"></exception>
         public static async Task<PythonEnvironment> GetEnvironment(string? envName = null)
         {
             Log.Logger.LogDebug(envName != null ? $"Getting conda environment '{envName}'" : "Getting base conda environment...");
@@ -640,9 +645,14 @@ namespace DotNetPythonBridge
         }
 
         /// <summary>
-        /// Get a specific environment by name.
+        /// Get a specific Conda environment by name in WSL.
         /// Returns a PythonEnvironment object if found, which includes the path to the environment.
         /// </summary>
+        /// <param name="envName"></param>
+        /// <param name="wslDistro"></param>
+        /// <returns></returns>
+        /// <exception cref="KeyNotFoundException"></exception>
+        /// <exception cref="InvalidOperationException"></exception>
         public static async Task<PythonEnvironment> GetEnvironmentWSL(string? envName = null, WSL_Helper.WSL_Distro? wslDistro = null)
         {
             Log.Logger.LogDebug($"Getting conda environment '{envName}' for WSL Distro: {(wslDistro != null ? wslDistro.Name : "None")}");
@@ -689,8 +699,13 @@ namespace DotNetPythonBridge
 
 
         /// <summary>
-        /// Create a new environment from YAML file.
+        /// Create a new Conda environment from YAML file.
         /// </summary>
+        /// <param name="yamlFile"></param>
+        /// <param name="envName"></param>
+        /// <returns></returns>
+        /// <exception cref="FileNotFoundException"></exception>
+        /// <exception cref="InvalidOperationException"></exception>
         public static async Task CreateEnvironment(string yamlFile, string? envName = null)
         {
             if (!File.Exists(yamlFile))// ensure the yaml file path exists
@@ -723,8 +738,14 @@ namespace DotNetPythonBridge
         }
 
         /// <summary>
-        /// Create a new environment from YAML file.
+        /// Create a new Conda environment from YAML file in WSL.
         /// </summary>
+        /// <param name="yamlFile"></param>
+        /// <param name="envName"></param>
+        /// <param name="wslDistro"></param>
+        /// <returns></returns>
+        /// <exception cref="FileNotFoundException"></exception>
+        /// <exception cref="InvalidOperationException"></exception>
         public static async Task CreateEnvironmentWSL(string yamlFile, string? envName = null, WSL_Helper.WSL_Distro? wslDistro = null)
         {
             if (!File.Exists(yamlFile))// ensure the yaml file path exists
@@ -781,8 +802,11 @@ namespace DotNetPythonBridge
         }
 
         /// <summary>
-        /// Delete an environment by name.
+        /// Delete a Conda environment by name.
         /// </summary>
+        /// <param name="envName"></param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
         public static async Task DeleteEnvironment(string envName)
         {
             Log.Logger.LogDebug(envName != null ? $"Deleting conda environment '{envName}'" : "Deleting base conda environment...");
@@ -797,8 +821,12 @@ namespace DotNetPythonBridge
         }
 
         /// <summary>
-        /// Delete an environment by name.
+        /// Delete a Conda environment by name in WSL.
         /// </summary>
+        /// <param name="envName"></param>
+        /// <param name="wslDistro"></param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
         public static async Task DeleteEnvironmentWSL(string envName, WSL_Helper.WSL_Distro? wslDistro = null)
         {
             Log.Logger.LogDebug($"Deleting conda environment '{envName}' for WSL Distro: {(wslDistro != null ? wslDistro.Name : "None")}");

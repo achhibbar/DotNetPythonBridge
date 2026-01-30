@@ -1,5 +1,8 @@
 namespace DotNetPythonBridge
 {
+    /// <summary>
+    /// Holds the result of executing a Python script or command.
+    /// </summary>
     public class PythonResult
     {
         public int ExitCode { get; }

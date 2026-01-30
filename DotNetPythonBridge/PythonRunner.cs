@@ -8,10 +8,18 @@ namespace DotNetPythonBridge
 {
     public static class PythonRunner
     {
+
         /// <summary>
-        /// Run a Python script inside the given environment.
-        /// If wSL_Distro is provided, runs inside the specified WSL distribution.
+        /// Run a Python script inside the given Conda environment.
         /// </summary>
+        /// <param name="scriptPath"></param>
+        /// <param name="env"></param>
+        /// <param name="arguments"></param>
+        /// <param name="cancellationToken"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        /// <exception cref="FileNotFoundException"></exception>
+        /// <exception cref="InvalidOperationException"></exception>
         public static async Task<PythonResult> RunScript(string scriptPath, PythonEnvironment? env = null, string[]? arguments = null,
             CancellationToken cancellationToken = default, TimeSpan? timeout = null)
         {
@@ -39,7 +47,7 @@ namespace DotNetPythonBridge
             string argumentsEscaped = string.Join(" ", argsList);
 
             var result = await ProcessHelper.RunProcess(pythonExe, $"{escapedScriptPath} {argumentsEscaped}", cancellationToken, timeout);
-            //var result = await ProcessHelper.RunProcess(pythonExe, $"{escapedScriptPath} {arguments}");
+
             if (result.ExitCode != 0)
             {
                 Log.Logger.LogError($"Script execution failed with error: {result.Error}");
@@ -50,9 +58,17 @@ namespace DotNetPythonBridge
         }
 
         /// <summary>
-        /// Run a Python script inside the given environment.
-        /// If wSL_Distro is provided, runs inside the specified WSL distribution.
+        /// Run a Python script inside the given Conda environment in WSL.
         /// </summary>
+        /// <param name="scriptPath"></param>
+        /// <param name="env"></param>
+        /// <param name="wSL_Distro"></param>
+        /// <param name="arguments"></param>
+        /// <param name="cancellationToken"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        /// <exception cref="FileNotFoundException"></exception>
+        /// <exception cref="InvalidOperationException"></exception>
         public static async Task<PythonResult> RunScriptWSL(string scriptPath, PythonEnvironment? env = null, WSL_Helper.WSL_Distro? wSL_Distro = null, string[]? arguments = null,
             CancellationToken cancellationToken = default, TimeSpan? timeout = null)
         {
@@ -95,9 +111,6 @@ namespace DotNetPythonBridge
                 "bash", "-lic", bashCommand
             },
             cancellationToken, timeout);
-            //var result = await ProcessHelper.RunProcess("wsl", $"-d {wSL_Distro.Name} bash -lic \"{bashCommand}\"");
-            //var result = await ProcessHelper.RunProcess(
-            //    "wsl", $"-d {wSL_Distro.Name} bash -lic \"{pythonExe} \\\"{FilenameHelper.convertWindowsPathToWSL(scriptPath)}\\\" {arguments}\"");
 
             if (result.ExitCode != 0)
             {
@@ -109,8 +122,14 @@ namespace DotNetPythonBridge
         }
 
         /// <summary>
-        /// Run inline Python code inside the given environment.
+        /// Run inline Python code inside the given Conda environment.
         /// </summary>
+        /// <param name="code"></param>
+        /// <param name="env"></param>
+        /// <param name="cancellationToken"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
         public static async Task<PythonResult> RunCode(string code, PythonEnvironment? env = null, CancellationToken cancellationToken = default, TimeSpan? timeout = null)
         {
             // Log the execution details, handle null env
@@ -122,7 +141,7 @@ namespace DotNetPythonBridge
             string escapedCode = BashCommandBuilder.EscapeQuotes(code);
 
             var result = await ProcessHelper.RunProcess(pythonExe, new[] { "-c", escapedCode }, cancellationToken, timeout);
-            //var result = await ProcessHelper.RunProcess(pythonExe, $"-c \"{escapedCode}\"");
+
             if (result.ExitCode != 0)
             {
                 Log.Logger.LogError($"Code execution failed with error: {result.Error}");
@@ -133,8 +152,15 @@ namespace DotNetPythonBridge
         }
 
         /// <summary>
-        /// Run inline Python code inside the given environment.
+        /// Run inline Python code inside the given Conda environment in WSL.
         /// </summary>
+        /// <param name="code"></param>
+        /// <param name="env"></param>
+        /// <param name="wSL_Distro"></param>
+        /// <param name="cancellationToken"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
         public static async Task<PythonResult> RunCodeWSL(string code, PythonEnvironment? env = null, WSL_Helper.WSL_Distro? wSL_Distro = null,
             CancellationToken cancellationToken = default, TimeSpan? timeout = null)
         {
@@ -151,9 +177,6 @@ namespace DotNetPythonBridge
             // Build the inner bash command safely
             string bashCommand = BashCommandBuilder.BuildBashRunInlineCodeCommand(pythonExe, code);
 
-            // Escape quotes to avoid breaking shell
-            //string escapedCode = code.Replace("\"", "\\\"");
-
             // Prepend with wsl -d <distro> to run inside WSL using bash -lic
             var result = await ProcessHelper.RunProcess("wsl", new[]
             {
@@ -161,8 +184,6 @@ namespace DotNetPythonBridge
                 "bash", "-lic", bashCommand
             },
             cancellationToken, timeout);
-            //var result = await ProcessHelper.RunProcess("wsl", $"-d {wSL_Distro.Name} bash -lic \"{bashCommand}\"");
-            //var result = await ProcessHelper.RunProcess("wsl", $"-d {wSL_Distro.Name} bash -lic \"{pythonExe} -c \\\"{escapedCode}\\\"\"");
 
             if (result.ExitCode != 0)
             {
@@ -175,8 +196,12 @@ namespace DotNetPythonBridge
         }
 
         /// <summary>
-        /// Resolve the correct python executable path for the environment.
+        /// Resolve the correct python executable path for the Conda environment.
         /// </summary>
+        /// <param name="env"></param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        /// <exception cref="FileNotFoundException"></exception>
         public static async Task<string> GetPythonExecutable(PythonEnvironment? env = null)
         {
             Log.Logger.LogDebug($"Resolving Python executable for environment: {(env != null ? env.Name : "Base")}");
@@ -229,8 +254,13 @@ namespace DotNetPythonBridge
         }
 
         /// <summary>
-        /// Resolve the correct python executable path for the environment.
+        /// Resolve the correct python executable path for the Conda environment in WSL.
         /// </summary>
+        /// <param name="env"></param>
+        /// <param name="wSL_Distro"></param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        /// <exception cref="FileNotFoundException"></exception>
         public static async Task<string> GetPythonExecutableWSL(PythonEnvironment? env = null, WSL_Helper.WSL_Distro? wSL_Distro = null)
         {
             Log.Logger.LogDebug($"Resolving Python executable for environment: {(env != null ? env.Name : "Base")}, WSL: {(wSL_Distro != null ? wSL_Distro.Name : "Default")}");
@@ -281,18 +311,12 @@ namespace DotNetPythonBridge
             // warm up the WSL distro in case it's not running
             await WSL_Helper.WarmupWSL_Distro(wSL_Distro);
 
-            // check if the exe exists inside WSL using bash -lic
-            // Use plain 'bash -c' — no login, no interactive, no profile loading
-            //string bashCmd = $"bash -c \"test -f {escapedExe} && echo exists || echo missing\"";
-
             var checkResult = await ProcessHelper.RunProcess("wsl", new[]
             {
                 "-d", wSL_Distro.Name,
                 "bash", "-c", $"test -f {escapedExe} && echo exists || echo missing"
             },
             timeout: CondaManager._options.WSLDistroDoesFileExistTimeout);
-            //var checkResult = await ProcessHelper.RunProcess("wsl", $"-d {wSL_Distro.Name} {bashCmd}");
-            //var checkResult = await ProcessHelper.RunProcess("wsl", $"-d {wSL_Distro.Name} bash -lic \"test -f {exe} && echo exists\"");
 
             if (checkResult.Output.Trim() != "exists") //file does not exist
             {

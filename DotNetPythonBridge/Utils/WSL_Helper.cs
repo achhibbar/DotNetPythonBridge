@@ -15,11 +15,14 @@ namespace DotNetPythonBridge.Utils
         private static WSL_Distros? Distros = null;
 
         /// <summary>
-        /// Get a list of all installed WSL distributions on the local machine.
+        /// Get the list of WSL distros available on the system.
         /// </summary>
+        /// <param name="refresh"></param>
+        /// <param name="listDistrosTimeout"></param>
+        /// <param name="wslWarmupTimeout"></param>
         /// <returns></returns>
         /// <exception cref="PlatformNotSupportedException"></exception>
-        /// <exception cref="Exception"></exception>
+        /// <exception cref="InvalidOperationException"></exception>
         public static async Task<WSL_Distros> GetWSLDistros(bool refresh = false, TimeSpan? listDistrosTimeout = null, TimeSpan? wslWarmupTimeout = null)
         {
             listDistrosTimeout ??= CondaManager._options.WSLListDistrosTimeout; // use timeout from options if not provided
@@ -41,8 +44,6 @@ namespace DotNetPythonBridge.Utils
 
             try
             {
-                //CancellationToken cancellationToken = new CancellationToken();
-                //var result = await ProcessHelper.RunProcess("wsl", "-l -v", cancellationToken, null, Encoding.Unicode); //& use Unicode encoding to handle possible non-ASCII characters
                 var result = await ProcessHelper.RunProcess("wsl", "-l -v", timeout: listDistrosTimeout, encoding: Encoding.Unicode); //& use Unicode encoding to handle possible non-ASCII characters
                 if (result.ExitCode == 0 && !string.IsNullOrWhiteSpace(result.Output))
                 {
@@ -67,7 +68,6 @@ namespace DotNetPythonBridge.Utils
                     }
 
                     // Cache the retrieved distros and return
-                    //Distros = distros;
                     SetDistros(distros); // thread-safe set cached distros
                     return distros;
                 }
@@ -117,20 +117,18 @@ namespace DotNetPythonBridge.Utils
 
         /// <summary>
         /// warm up a WSL distro by running a simple command in it in case it's not running.
-        /// this can happen when the machine was just started and the WSL distro is not running yet.
         /// </summary>
         /// <param name="wslDistro"></param>
+        /// <param name="wslWarmupTimeout"></param>
         /// <returns></returns>
-        /// <exception cref="Exception"></exception>
-       public static async Task<PythonResult> WarmupWSL_Distro(WSL_Helper.WSL_Distro wslDistro, TimeSpan? wslWarmupTimeout = null)
+        /// <exception cref="InvalidOperationException"></exception>
+        public static async Task<PythonResult> WarmupWSL_Distro(WSL_Helper.WSL_Distro wslDistro, TimeSpan? wslWarmupTimeout = null)
         {
             wslWarmupTimeout ??= CondaManager._options.WSLWarmupTimeout; // use timeout from options if not provided
 
             for (int i = 0; i < CondaManager._options.WSLWarmupRetries; i++)
             {
-                //string escapedDistroName = FilenameHelper.BashEscape(wslDistro.Name);
                 var result = await ProcessHelper.RunProcess("wsl", $"-d {wslDistro.Name} echo WSL Distro Warmed Up", timeout: wslWarmupTimeout);
-                //var result = await ProcessHelper.RunProcess("wsl", $"-d {escapedDistroName} echo WSL Distro Warmed Up");
 
                 if (result.ExitCode == 0)
                 {

@@ -1,5 +1,8 @@
 ﻿namespace DotNetPythonBridge
 {
+    /// <summary>
+    /// Represents a Conda environment, either local or WSL.
+    /// </summary>
     public class PythonEnvironment
     {
         public string Name { get; }
@@ -16,6 +19,9 @@
         public override string ToString() => $"{Name} ({Path}) {(string.IsNullOrEmpty(WSL_Distro) ? "" : $"[WSL: {WSL_Distro}]")}";
     }
 
+    /// <summary>
+    /// Holds a collection of Conda environments.
+    /// </summary>
     public class PythonEnvironments
     {
         public List<PythonEnvironment> Environments { get; set; }

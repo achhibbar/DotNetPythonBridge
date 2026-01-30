@@ -57,7 +57,17 @@ namespace DotNetPythonBridge
             _wsl = wsl;
         }
 
-
+        /// <summary>
+        /// Start a long-running Python service inside the given conda environment.
+        /// </summary>
+        /// <param name="scriptPath"></param>
+        /// <param name="env"></param>
+        /// <param name="options"></param>
+        /// <param name="cancellationToken"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        /// <exception cref="FileNotFoundException"></exception>
+        /// <exception cref="InvalidOperationException"></exception>
         public static async Task<PythonServiceHandle> Start(string scriptPath, PythonEnvironment? env = null, PythonServiceOptions? options = null,
             CancellationToken cancellationToken = default, TimeSpan? timeout = null)
         {
@@ -80,13 +90,11 @@ namespace DotNetPythonBridge
                 // Reserve port, if 0 then get free port, otherwise use specified port
                 var portReservation = PortHelper.ReservePort(options.DefaultPort);
                 int port = portReservation.Port;
-                //int port = options.DefaultPort == 0 ? PortHelper.GetFreePort() : options.DefaultPort; // if 0, get free port
 
                 // Arguments: script + port + user args, using bash escaping if needed
                 string[] args = { scriptPath, "--port", port.ToString(), BashCommandBuilder.BashEscape(BashCommandBuilder.Escape(options.DefaultServiceArgs)) };
-                //string[] args = { scriptPath, "--port", port.ToString(), options.DefaultServiceArgs };
 
-                // give up the port reservation
+                // give up the port reservation and start the process immediately after
                 portReservation.Release();
 
                 // start the process using ArgumentList to avoid issues with spaces
@@ -184,7 +192,12 @@ namespace DotNetPythonBridge
             throw new InvalidOperationException($"Python service failed to become healthy after {options.ServiceRetryCount} attempts.");
         }
 
-
+        /// <summary>
+        /// Check the health of the Python service by polling the /health endpoint until timeout.
+        /// </summary>
+        /// <param name="options"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         public async Task<bool> WaitForHealthCheck(PythonServiceOptions? options = null, CancellationToken cancellationToken = default)
         {
             options ??= new PythonServiceOptions();
@@ -235,7 +248,7 @@ namespace DotNetPythonBridge
         }
 
         /// <summary>
-        /// Stop the Python service gracefully, with optional force kill after timeout.
+        /// Stop and dispose the Python service.
         /// </summary>
         /// <param name="options"></param>
         /// <returns></returns>
@@ -308,9 +321,15 @@ namespace DotNetPythonBridge
             }
         }
 
-
+        /// <summary>
+        /// Stop and synchronously dispose the Python service.
+        /// </summary>
         public void Dispose() => Stop().GetAwaiter().GetResult();
 
+        /// <summary>
+        /// Stop and asynchronously dispose the Python service.
+        /// </summary>
+        /// <returns></returns>
         public async ValueTask DisposeAsync()
         {
             await Stop();
