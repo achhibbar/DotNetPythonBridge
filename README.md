@@ -1,4 +1,4 @@
-# DotNetPythonBridge
+ï»¿# DotNetPythonBridge
 
 DotNetPythonBridge is a small .NET library that makes it easier to run Python executables, manage Conda/Mamba environments (including WSL), and start/monitor long-running Python services from .NET applications. It provides helpers for process execution, escaping shell/WSL commands, port reservation and basic service health checks.
 
@@ -21,7 +21,7 @@ This README describes:
   - [List Conda environments](#list-conda-environments)
 - [Options and configuration](#options-and-configuration)
 - [WSL, Conda and Mamba](#wsl-conda-and-mamba)
-- [Port reservation and races — important note](#port-reservation-and-races---important-note)
+- [Port reservation and races â€” important note](#port-reservation-and-races---important-note)
 - [Logging and diagnostics](#logging-and-diagnostics)
 - [Tests](#tests)
 - [Contributing](#contributing)
@@ -41,7 +41,7 @@ This README describes:
 
 ## Install / build
 
-This repository is primarily C# (library) with a few Python helpers. There is no published NuGet package in the README — to use the library:
+This repository is primarily C# (library) with a few Python helpers. There is no published NuGet package in the README â€” to use the library:
 
 1. Clone the repo:
    ```bash
@@ -128,8 +128,8 @@ Run a command inside WSL:
 ## Options and configuration
 
 Primary options objects:
-- `DotNetPythonBridgeOptions` — global / initialization options (WSL defaults, timeouts).
-- `PythonServiceOptions` — controls service start behavior:
+- `DotNetPythonBridgeOptions` â€” global / initialization options (WSL defaults, timeouts).
+- `PythonServiceOptions` â€” controls service start behavior:
   - `DefaultPort` (int): 0 = auto (ephemeral), or a specific port.
   - `DefaultServiceArgs` (string): extra args passed to the script (escaped).
   - `HealthCheckEnabled` (bool): perform health check after start.
@@ -154,7 +154,7 @@ WSL notes:
 
 ---
 
-## Port reservation and races — important note
+## Port reservation and races â€” important note
 
 Because arbitrary Python services usually bind their own socket, there's an inherent race if the library "reserves" a free port and then releases it before the child process binds it. This repo implements the following pragmatic approach:
 
@@ -178,7 +178,7 @@ In short: if you cannot modify the Python service, the library's retry approach 
   - Port reservation and service-start logs (`PortHelper`, `PythonService`)
   - Process execution output captured by `ProcessHelper` (returned as `PythonResult`)
 
-Be mindful of logging sensitive data — arguments are escaped, but avoid logging secrets in service args.
+Be mindful of logging sensitive data â€” arguments are escaped, but avoid logging secrets in service args.
 
 ---
 
@@ -208,30 +208,24 @@ Suggested additional tests:
 
 ---
 
-## Contributing
+## Licensing
 
-Contributions welcome. Suggested small improvements:
-- Add unit tests for port-reservation retry paths.
-- Improve process disposal semantics (ensure Process.Dispose() called and event handlers removed on stop).
-- Add an option to prefer `mamba` over `conda` (or expose preference in `DotNetPythonBridgeOptions`).
-- Add clearer domain-specific exception types for more explicit error handling.
+DotNetPythonBridge is **open-source and free for non-commercial use**.
 
-To contribute:
-1. Fork the repo
-2. Create a branch for your change
-3. Add/update tests
-4. Open a PR with a description of the change
+### âœ… Free Use
+- Personal projects
+- Research and experimentation
+- Academic and educational use
+- Open-source, non-commercial projects
 
----
+### ðŸ’¼ Commercial Use
+A **paid commercial license is required** if you use DotNetPythonBridge:
+- In a for-profit company
+- In internal tools supporting revenue
+- In SaaS, hosted services, or paid APIs
+- As part of a product or service offered for sale
+- For consulting or client deliverables
 
-## License
+If you're unsure whether your use is commercial, **assume that it is**.
 
-This repository does not include an explicit license file in the sources shown. If you intend to publish or share this project, add a LICENSE file (e.g., MIT, Apache-2.0) and document it here.
-
----
-
-What I did and what's next
-- I created this README.md to document the library's purpose, usage, known pitfalls (notably the port reservation race) and configuration points. If you want, I can:
-  - Add example unit tests to demonstrate the port-retry behavior.
-  - Add a short “API reference” section that lists the most important public methods and signatures extracted from the codebase.
-  - Draft a short CONTRIBUTING.md and a LICENSE file (pick a license and I will draft it).
+ðŸ“§ Contact **[your email]** for commercial licensing.
