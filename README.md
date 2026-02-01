@@ -1,19 +1,29 @@
 ﻿# DotNetPythonBridge
 
-DotNetPythonBridge is a small .NET library that makes it easier to run Python executables, manage Conda/Mamba environments (including WSL), and start/monitor long-running Python services from .NET applications. It provides helpers for process execution, escaping shell/WSL commands, port reservation and basic service health checks.
+DotNetPythonBridge is a .NET library designed to make Python integration boring, reliable, and production-ready.
 
-This README describes:
-- What the library does
-- Quick start and API examples
-- Configuration and options
-- WSL / Conda / Mamba behavior
-- Port reservation and service-start semantics (important note about races)
-- Troubleshooting, tests, and contribution pointers
+If you’ve ever struggled with:
+- Hard-coded Python or Conda paths
+- Different behavior between Windows and WSL
+- Shell quoting and escaping issues
+- Orphaned Python processes or stuck ports
+- Python services that work locally but fail in deployment
+
+…this library exists to remove that friction.
+
+DotNetPythonBridge provides a clean .NET API for:
+- Discovering and running Python, Conda, or Mamba (native or via WSL)
+- Managing and activating environments safely
+- Starting, monitoring, and stopping long-running Python services
+- Reserving ports and performing basic health checks
+
+It’s built for developers who want to **embed Python into .NET applications** without turning process management into a maintenance burden.
 
 ---
 
 ## Table of contents
 - [Key features](#key-features)
+- [Who is this for?](#who-is-this-for)
 - [Install / build](#install--build)
 - [Quick examples](#quick-examples)
   - [Run a Python script](#run-a-python-script)
@@ -36,6 +46,18 @@ This README describes:
 - Helpers for safe bash/WSL argument escaping to avoid shell-injection pitfalls.
 - Utilities for reserving TCP ports (with retry mitigation for races).
 - Logging via Microsoft.Extensions.Logging (Serilog used in the repository).
+
+---
+
+## Who is this for?
+
+- .NET developers embedding Python for ML, CV, or data processing
+- Applications that need to start and manage Python services
+- Teams using Conda/Mamba across Windows and WSL
+- Anyone tired of debugging shell scripts in production
+
+If you just need to run a one-off Python script, this may be overkill.
+If Python is part of your application architecture, this library is designed for you.
 
 ---
 
