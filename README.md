@@ -208,24 +208,45 @@ Suggested additional tests:
 
 ---
 
-## Licensing
+## License
 
-DotNetPythonBridge is **open-source and free for non-commercial use**.
+This project is **source-available** and licensed under the  
+**Polyform Noncommercial License 1.0.0**.
 
-### ✅ Free Use
+### What this means
+
+✅ **Free to use for:**
 - Personal projects
-- Research and experimentation
-- Academic and educational use
-- Open-source, non-commercial projects
+- Research
+- Evaluation
+- Educational use
+- Open-source or non-commercial projects
 
-### 💼 Commercial Use
-A **paid commercial license is required** if you use DotNetPythonBridge:
-- In a for-profit company
-- In internal tools supporting revenue
-- In SaaS, hosted services, or paid APIs
-- As part of a product or service offered for sale
-- For consulting or client deliverables
+❌ **Not free for:**
+- Commercial use
+- Internal business tools
+- SaaS products
+- Paid services
+- Any revenue-generating activity
 
-If you're unsure whether your use is commercial, **assume that it is**.
+### Commercial use
 
-📧 Contact **[your email]** for commercial licensing.
+If you wish to use this software for **commercial purposes**, you must obtain a
+**commercial license**.
+
+Commercial licenses are available here:
+> 🔗 **[Link coming soon — Lemon Squeezy]**
+
+Until the commercial license page is live, please contact:
+> **[your-email@example.com]**
+
+### Why this model?
+
+This licensing model allows the project to:
+- Remain openly available and transparent
+- Be free for learning and experimentation
+- Sustain continued development through commercial funding
+
+For full license terms, see:
+- [`LICENSE.md`](./LICENSE.md)
+

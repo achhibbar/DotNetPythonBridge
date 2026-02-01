@@ -1,108 +1,131 @@
-﻿# DotNetPythonBridge Non-Commercial License
+﻿# PolyForm Noncommercial License 1.0.0
 
-Copyright (c) 2026 Ash Chhibbar
+<https://polyformproject.org/licenses/noncommercial/1.0.0>
 
-## 1. Overview
+## Acceptance
 
-DotNetPythonBridge is licensed under a **dual-licensing model**:
+In order to get any license under these terms, you must agree
+to them as both strict obligations and conditions to all
+your licenses.
 
-- **Free and open-source for non-commercial use**
-- **Commercial use requires a paid license**
+## Copyright License
 
-By using, copying, modifying, or distributing this software, you agree to the terms below.
+The licensor grants you a copyright license for the
+software to do everything you might do with the software
+that would otherwise infringe the licensor's copyright
+in it for any permitted purpose.  However, you may
+only distribute the software according to [Distribution
+License](#distribution-license) and make changes or new works
+based on the software according to [Changes and New Works
+License](#changes-and-new-works-license).
 
----
+## Distribution License
 
-## 2. Definitions
+The licensor grants you an additional copyright license
+to distribute copies of the software.  Your license
+to distribute covers distributing the software with
+changes and new works permitted by [Changes and New Works
+License](#changes-and-new-works-license).
 
-### “Software”
-The DotNetPythonBridge source code, binaries, documentation, and related materials.
+## Notices
 
-### “Non-Commercial Use”
-Use of the Software **not primarily intended for or directed toward commercial advantage or monetary compensation**.
+You must ensure that anyone who gets a copy of any part of
+the software from you also gets a copy of these terms or the
+URL for them above, as well as copies of any plain-text lines
+beginning with `Required Notice:` that the licensor provided
+with the software.  For example:
 
-Examples include:
-- Personal projects
-- Academic or educational use
-- Research and experimentation
-- Internal evaluation without production use
-- Open-source projects that are not monetized
+> Required Notice: Copyright Yoyodyne, Inc. (http://example.com)
 
-### “Commercial Use”
-Any use of the Software that is **directly or indirectly connected to commercial activity**, including but not limited to:
-- Use within a for-profit company
-- Use in internal tools supporting revenue-generating operations
-- SaaS, hosted services, or paid APIs
-- Distribution as part of a paid product
-- Consulting, contracting, or client deliverables
+## Changes and New Works License
 
-If you are unsure whether your use is commercial, **assume it is**.
+The licensor grants you an additional copyright license to
+make changes and new works based on the software for any
+permitted purpose.
 
----
+## Patent License
 
-## 3. License Grant (Non-Commercial)
+The licensor grants you a patent license for the software that
+covers patent claims the licensor can license, or becomes able
+to license, that you would infringe by using the software.
 
-You are granted a **royalty-free, non-exclusive license** to:
+## Noncommercial Purposes
 
-- Use the Software
-- Copy and modify the Software
-- Distribute modified or unmodified versions
+Any noncommercial purpose is a permitted purpose.
 
-**Only for Non-Commercial Use.**
+## Personal Uses
 
-You must retain this license and copyright notice in all copies.
+Personal use for research, experiment, and testing for
+the benefit of public knowledge, personal study, private
+entertainment, hobby projects, amateur pursuits, or religious
+observance, without any anticipated commercial application,
+is use for a permitted purpose.
 
----
+## Noncommercial Organizations
 
-## 4. Commercial License Requirement
+Use by any charitable organization, educational institution,
+public research organization, public safety or health
+organization, environmental protection organization,
+or government institution is use for a permitted purpose
+regardless of the source of funding or obligations resulting
+from the funding.
 
-Commercial use of the Software requires the purchase of a **separate commercial license**.
+## Fair Use
 
-Commercial licenses are available from:
+You may have "fair use" rights for the software under the
+law. These terms do not limit them.
 
-**Ash Chhibbar**  
-📧 Email: [your email]  
-🌐 Website: [optional later]
+## No Other Rights
 
----
+These terms do not allow you to sublicense or transfer any of
+your licenses to anyone else, or prevent the licensor from
+granting licenses to anyone else.  These terms do not imply
+any other licenses.
 
-## 5. Redistribution
+## Patent Defense
 
-You may redistribute the Software under this license provided that:
-- This license is included
-- Commercial-use restrictions are preserved
-- No endorsement is implied
+If you make any written claim that the software infringes or
+contributes to infringement of any patent, your patent license
+for the software granted under these terms ends immediately. If
+your company makes such a claim, your patent license ends
+immediately for work on behalf of your company.
 
-You may not relicense the Software under more permissive terms.
+## Violations
 
----
+The first time you are notified in writing that you have
+violated any of these terms, or done anything with the software
+not covered by your licenses, your licenses can nonetheless
+continue if you come into full compliance with these terms,
+and take practical steps to correct past violations, within
+32 days of receiving notice.  Otherwise, all your licenses
+end immediately.
 
-## 6. Contributions
+## No Liability
 
-Unless otherwise stated, contributions submitted for inclusion are licensed under the same terms.
+***As far as the law allows, the software comes as is, without
+any warranty or condition, and the licensor will not be liable
+to you for any damages arising out of these terms or the use
+or nature of the software, under any kind of legal claim.***
 
----
+## Definitions
 
-## 7. No Warranty
+The **licensor** is the individual or entity offering these
+terms, and the **software** is the software the licensor makes
+available under these terms.
 
-THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND.
+**You** refers to the individual or entity agreeing to these
+terms.
 
----
+**Your company** is any legal entity, sole proprietorship,
+or other kind of organization that you work for, plus all
+organizations that have control over, are under the control of,
+or are under common control with that organization.  **Control**
+means ownership of substantially all the assets of an entity,
+or the power to direct its management and policies by vote,
+contract, or otherwise.  Control can be direct or indirect.
 
-## 8. Limitation of Liability
+**Your licenses** are all the licenses granted to you for the
+software under these terms.
 
-IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING FROM THE SOFTWARE OR ITS USE.
-
----
-
-## 9. Termination
-
-Violation of this license automatically terminates your rights.
-
----
-
-## 10. Contact
-
-For commercial licensing or questions:
-
-📧 [your email]
+**Use** means anything you do with the software requiring one
+of your licenses.
