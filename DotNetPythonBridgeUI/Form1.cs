@@ -3,22 +3,53 @@ using DotNetPythonBridge.Utils;
 using Microsoft.Extensions.Logging;
 using static DotNetPythonBridge.Utils.WSL_Helper;
 
-namespace DotNetPythonBridgeUI
+namespace DotNetPythonBridge.SampleApp
 {
+    // Add this at the top of your Form1 class
+    public static class SampleConfig
+    {
+        // Update these values for your environment
+        // The name of an existing conda environment to test with
+        public static string CondaEnvName = "SimpleITK_OpenCV_env";
+        // The path to a test Python service script e.g., @"C:\Path\To\TestService.py"
+        public static string TestServiceScriptPath = "TestService.py";
+        // The path to a test Python script e.g., @"C:\Path\To\TestScript.py"
+        public static string TestScriptPath = "TestScript2.py";
+        // The arguments to pass to the test script (if any)
+        public static string[] TestScriptArguments = new string[] { "First_Name", "Surname" };
+        // The path to a test conda environment YAML file e.g., @"C:\Path\To\testCondaEnvCreate.yml"
+        public static string CondaEnvYamlPath = "testCondaEnvCreate.yml";
+        // If the name of the new conda environment is not specified in the YAML, this name can be used
+        public static string NewCondaEnvName = "DotNetPythonBridgeTest-env";
+        // The default WSL distro to use when initializing WSL-related functionality manually
+        public static string DefaultWSLDistro = "Ubuntu";
+        // The default conda paths for manual initialization
+        public static string DefaultCondaPath = @"C:\Users\Ash\miniconda3\Scripts\conda.exe";
+        // The default WSL conda path for manual initialization
+        // Can either be the Linux path e.g., "/home/username/miniconda3/bin/conda"
+        // or the Windows path to the WSL filesystem e.g., @"\\wsl$\Ubuntu\home\username\miniconda3\bin\conda.exe"
+        public static string DefaultWSLCondaPath = @"/home/achhibbar/miniconda3/bin/conda";
+    }
+
     public partial class Form1 : Form
     {
         private readonly ILoggerFactory _loggerFactory;
         private readonly DotNetPythonBridgeOptions options = new DotNetPythonBridgeOptions();
         private readonly PythonServiceOptions serviceOptions = new PythonServiceOptions();
         private bool isCondaInitialized = false;
+        // Field to cache WSL distros
         private WSL_Helper.WSL_Distros? distros = null;
 
+        // Fields to hold the services for Windows and WS
+        // They're best defined as global fields so they can be disposed automatically if the Form is closed without calling service.Stop()
         private PythonServiceHandle? winPyService;
         private PythonServiceHandle? wslPyService;
 
         public Form1()
         {
             InitializeComponent();
+
+            // Example of setting up logging
 
             // Keep the factory alive as a field
             _loggerFactory = LoggerFactory.Create(builder =>
@@ -55,7 +86,7 @@ namespace DotNetPythonBridgeUI
             //rtbPythonBridge.Text += Environment.NewLine;
 
             ////get a specific env
-            //Task<PythonEnvironment> env = CondaManager.GetEnvironment("SimpleITK_OpenCV_env");
+            //Task<PythonEnvironment> env = CondaManager.GetEnvironment(SampleConfig.CondaEnvName);
             //rtbPythonBridge.Text += env + Environment.NewLine;
 
             //rtbPythonBridge.Text += Environment.NewLine;
@@ -76,7 +107,7 @@ namespace DotNetPythonBridgeUI
             //env = CondaManager.GetEnvironment("ultralytics-newest-env");
 
             //options.DefaultPort = 8080;
-            //using var service = await PythonService.Start(await env, @"C:\Users\Ash\Documents\Jupyter_Notebooks\Ultralytics_YoloV8\TestService.py", options);
+            //using var service = await PythonService.Start(await env, SampleConfig.TestServiceScriptPath, options);
 
             //// Health check
             //using var client = new HttpClient();
@@ -132,9 +163,6 @@ namespace DotNetPythonBridgeUI
 
         private async void btnTestConda_Click(object sender, EventArgs e)
         {
-            //path to a yaml file
-            string yamlPath = @"F:\Ash docs\BTBP\c#\Ash projects\DotNetPythonBridgeUI\testCondaEnvCreate.yml";
-
             if (!checkBoxWSL.Checked) // run in windows
             {
 
@@ -156,7 +184,7 @@ namespace DotNetPythonBridgeUI
 
                 //create a new conda env using a yaml file
                 rtbPythonBridge.Text += "Creating Conda/Mamba Environment from YAML..." + Environment.NewLine;
-                await CondaManager.CreateEnvironment(yamlPath, "DotNetPythonBridgeTest-env");
+                await CondaManager.CreateEnvironment(SampleConfig.CondaEnvYamlPath, SampleConfig.NewCondaEnvName);
                 rtbPythonBridge.Text += "Environment created from YAML." + Environment.NewLine;
                 //list the envs again to see the new env
                 envs = await CondaManager.ListEnvironments(refresh: true);
@@ -168,7 +196,7 @@ namespace DotNetPythonBridgeUI
 
                 //delete the env
                 rtbPythonBridge.Text += "Deleting Conda/Mamba Environment..." + Environment.NewLine;
-                await CondaManager.DeleteEnvironment("DotNetPythonBridgeTest-env");
+                await CondaManager.DeleteEnvironment(SampleConfig.NewCondaEnvName);
                 rtbPythonBridge.Text += "Environment deleted." + Environment.NewLine;
                 //list the envs again to see the env is deleted
                 envs = await CondaManager.ListEnvironments(refresh: true);
@@ -219,7 +247,7 @@ namespace DotNetPythonBridgeUI
                 if (distros.GetDefaultDistro() != null)
                 {
 
-                    await CondaManager.CreateEnvironmentWSL(yamlPath, "DotNetPythonBridgeTest-env", distros.GetDefaultDistro());
+                    await CondaManager.CreateEnvironmentWSL(SampleConfig.CondaEnvYamlPath, SampleConfig.NewCondaEnvName, distros.GetDefaultDistro());
                     rtbPythonBridge.Text += "Environment created in WSL." + Environment.NewLine;
                     //list the envs again to see the new env
                     var envs = CondaManager.ListEnvironmentsWSL(distros.GetDefaultDistro(), refresh: true); //refresh the env list to see the new env
@@ -231,7 +259,7 @@ namespace DotNetPythonBridgeUI
 
                     //delete the env in wsl
                     rtbPythonBridge.Text += "Deleting Conda/Mamba Environment in WSL..." + Environment.NewLine;
-                    await CondaManager.DeleteEnvironmentWSL("DotNetPythonBridgeTest-env", distros.GetDefaultDistro());
+                    await CondaManager.DeleteEnvironmentWSL(SampleConfig.NewCondaEnvName, distros.GetDefaultDistro());
                     rtbPythonBridge.Text += "Environment deleted in WSL." + Environment.NewLine;
                     //list the envs again to see the env is deleted
                     envs = CondaManager.ListEnvironmentsWSL(distros.GetDefaultDistro(), refresh: true); // refresh the env list to see the env is deleted
@@ -270,7 +298,7 @@ namespace DotNetPythonBridgeUI
                 }
 
                 //get a specific env
-                var env = await CondaManager.GetEnvironment("SimpleITK_OpenCV_env");
+                var env = await CondaManager.GetEnvironment(SampleConfig.CondaEnvName);
                 //get the python executable path
                 string pythonExe = await PythonRunner.GetPythonExecutable(env);
                 rtbPythonBridge.Text += $"Conda Env Python Executable: {env.Name} at {pythonExe}" + Environment.NewLine;
@@ -278,16 +306,14 @@ namespace DotNetPythonBridgeUI
 
                 // start a python service in windows using the env
                 rtbPythonBridge.Text += "Starting Python Service in Windows..." + Environment.NewLine;
-                string serviceFilePath = @"F:\Ash docs\BTBP\c#\Ash projects\DotNetPythonBridgeUI\TestService.py";
+                string serviceFilePath = SampleConfig.TestServiceScriptPath;
                 winPyService = await PythonService.Start(serviceFilePath, env);
                 rtbPythonBridge.Text += $"Python Service started in Windows on port {winPyService.Service.Port}" + Environment.NewLine;
                 rtbPythonBridge.Text += Environment.NewLine;
 
                 //run a python script in windows using the env
-                string scriptPath = @"F:\Ash docs\BTBP\c#\Ash projects\DotNetPythonBridgeUI\TestScript2.py";
-                //string arguments = "Ash Nira"; //add any arguments if needed
-                string[] arguments = new string[] { "Ash", "Nira" };
-                var pyResult = await PythonRunner.RunScript(scriptPath, env, arguments);
+                string scriptPath = SampleConfig.TestScriptPath;
+                var pyResult = await PythonRunner.RunScript(scriptPath, env, SampleConfig.TestScriptArguments);
                 rtbPythonBridge.Text += "Running Python Script in Windows:" + Environment.NewLine;
                 rtbPythonBridge.Text += pyResult.Output + Environment.NewLine;
                 rtbPythonBridge.Text += pyResult.Error + Environment.NewLine;
@@ -332,7 +358,7 @@ namespace DotNetPythonBridgeUI
 
                 if (defaultDistro != null)
                 {
-                    var env = await CondaManager.GetEnvironmentWSL("SimpleITK_OpenCV_env", defaultDistro);
+                    var env = await CondaManager.GetEnvironmentWSL(SampleConfig.CondaEnvName, defaultDistro);
                     //get the python executable path
                     var pythonExe = await PythonRunner.GetPythonExecutableWSL(env, defaultDistro);
                     rtbPythonBridge.Text += $"Conda Env Python Executable in WSL: {env.Name} at {pythonExe}" + Environment.NewLine;
@@ -347,11 +373,9 @@ namespace DotNetPythonBridgeUI
                 //run a python script in wsl using the env
                 if (defaultDistro != null)
                 {
-                    var env = await CondaManager.GetEnvironmentWSL("SimpleITK_OpenCV_env", defaultDistro);
-                    //var arguments = "Ash Nira"; //add any arguments if needed
-                    var arguments = new string[] { "Ash", "Nira" };
-                    string scriptPath = @"F:\Ash docs\BTBP\c#\Ash projects\DotNetPythonBridgeUI\TestScript2.py";
-                    var pyResult = await PythonRunner.RunScriptWSL(scriptPath, env, defaultDistro, arguments);
+                    var env = await CondaManager.GetEnvironmentWSL(SampleConfig.CondaEnvName, defaultDistro);
+                    string scriptPath = SampleConfig.TestScriptPath;
+                    var pyResult = await PythonRunner.RunScriptWSL(scriptPath, env, defaultDistro, SampleConfig.TestScriptArguments);
                     rtbPythonBridge.Text += "Running Python Script in WSL:" + Environment.NewLine;
                     rtbPythonBridge.Text += pyResult.Output + Environment.NewLine;
                     rtbPythonBridge.Text += pyResult.Error + Environment.NewLine;
@@ -365,7 +389,7 @@ namespace DotNetPythonBridgeUI
                 //run inline python code in wsl using the env
                 if (defaultDistro != null)
                 {
-                    var env = await CondaManager.GetEnvironmentWSL("SimpleITK_OpenCV_env", defaultDistro);
+                    var env = await CondaManager.GetEnvironmentWSL(SampleConfig.CondaEnvName, defaultDistro);
                     string inlineCode = "result = 0\nfor i in range(5):\n    result += i\nprint(f'Sum of first 5 numbers is: {result}')";
                     var pyResult = await PythonRunner.RunCodeWSL(inlineCode, env, defaultDistro);
                     rtbPythonBridge.Text += "Running Inline Python Code in WSL:" + Environment.NewLine;
@@ -380,8 +404,8 @@ namespace DotNetPythonBridgeUI
 
                 if (defaultDistro != null)
                 {
-                    var env = await CondaManager.GetEnvironmentWSL("SimpleITK_OpenCV_env", defaultDistro);
-                    string serviceFilePath = @"F:\Ash docs\BTBP\c#\Ash projects\DotNetPythonBridgeUI\TestService.py";
+                    var env = await CondaManager.GetEnvironmentWSL(SampleConfig.CondaEnvName, defaultDistro);
+                    string serviceFilePath = SampleConfig.TestServiceScriptPath;
                     rtbPythonBridge.Text += "Starting Python Service in WSL..." + Environment.NewLine;
                     wslPyService = await PythonService.StartWSL(serviceFilePath, env, wsl: defaultDistro);
                     rtbPythonBridge.Text += $"Python Service started in WSL on port {wslPyService.Service.Port}" + Environment.NewLine;
@@ -464,9 +488,9 @@ namespace DotNetPythonBridgeUI
         {
             // set some options and get the default wsl distro using the options class using fluent syntax
             DotNetPythonBridgeOptions dotNetPythonBridgeOptions = new DotNetPythonBridgeOptions()
-                .WithCondaPath(@"C:\Users\Ash\miniconda3\Scripts\conda.exe")
-                .WithWSLDistro("Ubuntu")
-                .WithWSLCondaPath(@"/home/achhibbar/miniconda3/bin/conda"); // windows path to wsl conda
+                .WithCondaPath(SampleConfig.DefaultCondaPath)
+                .WithWSLDistro(SampleConfig.DefaultWSLDistro)
+                .WithWSLCondaPath(SampleConfig.DefaultWSLCondaPath); // windows path to wsl conda
 
             await CondaManager.Initialize(dotNetPythonBridgeOptions, reinitialize: true);
 
@@ -520,8 +544,8 @@ namespace DotNetPythonBridgeUI
                 // Start and stop a python service using lazy initialization
                 // start a python service in windows using the env
                 rtbPythonBridge.Text += "Starting Python Service in Windows..." + Environment.NewLine;
-                string serviceFilePath = @"F:\Ash docs\BTBP\c#\Ash projects\DotNetPythonBridgeUI\TestService.py";
-                var env = await CondaManager.GetEnvironment("SimpleITK_OpenCV_env");
+                string serviceFilePath = SampleConfig.TestServiceScriptPath;
+                var env = await CondaManager.GetEnvironment(SampleConfig.CondaEnvName);
                 // no env provided, will use lazy init by using the base conda env
                 winPyService = await PythonService.Start(serviceFilePath, env, cancellationToken: token, timeout: timeout);
                 rtbPythonBridge.Text += $"Python Service started in Windows on port {winPyService.Service.Port}" + Environment.NewLine;
@@ -551,9 +575,9 @@ namespace DotNetPythonBridgeUI
                     wslPyService = null;
                 }
 
-                string serviceFilePath = @"F:\Ash docs\BTBP\c#\Ash projects\DotNetPythonBridgeUI\TestService.py";
+                string serviceFilePath = SampleConfig.TestServiceScriptPath;
                 rtbPythonBridge.Text += "Starting Python Service in WSL..." + Environment.NewLine;
-                var env = await CondaManager.GetEnvironmentWSL("SimpleITK_OpenCV_env");
+                var env = await CondaManager.GetEnvironmentWSL(SampleConfig.CondaEnvName);
                 // no env or distro provided, will use lazy init by using the base conda env in default wsl distro
                 wslPyService = await PythonService.StartWSL(serviceFilePath, env, cancellationToken: token, timeout: timeout); 
                 rtbPythonBridge.Text += $"Python Service started in WSL on port {wslPyService.Service.Port}" + Environment.NewLine;
@@ -592,11 +616,9 @@ namespace DotNetPythonBridgeUI
             if (!checkBoxWSL.Checked) // run in windows
             {
                 //lazy run a python script in windows
-                string scriptPath = @"F:\Ash docs\BTBP\c#\Ash projects\DotNetPythonBridgeUI\TestScript2.py";
-                //string arguments = "Ash Nira"; //add any arguments if needed
-                string[] arguments = new string[] { "Ash", "Nira" };
+                string scriptPath = SampleConfig.TestScriptPath;
                 // run script with cancellation token and timeout
-                var pyResult = await PythonRunner.RunScript(scriptPath, arguments: arguments, cancellationToken: token, timeout: timeout); // no env provided, will use lazy init by using the base conda env
+                var pyResult = await PythonRunner.RunScript(scriptPath, arguments: SampleConfig.TestScriptArguments, cancellationToken: token, timeout: timeout); // no env provided, will use lazy init by using the base conda env
                 rtbPythonBridge.Text += "Running Python Script in Windows:" + Environment.NewLine;
                 rtbPythonBridge.Text += pyResult.Output + Environment.NewLine;
                 rtbPythonBridge.Text += pyResult.Error + Environment.NewLine;
@@ -614,11 +636,9 @@ namespace DotNetPythonBridgeUI
             else // run in wsl
             {
                 //run a python script in wsl using the env
-                //var arguments = "Ash Nira"; //add any arguments if needed
-                var arguments = new string[] { "Ash", "Nira" };
-                string scriptPath = @"F:\Ash docs\BTBP\c#\Ash projects\DotNetPythonBridgeUI\TestScript2.py";
+                string scriptPath = SampleConfig.TestScriptPath;
                 // no env or distro provided, will use lazy init by using the base conda env in default wsl distro
-                var pyResult = await PythonRunner.RunScriptWSL(scriptPath, arguments: arguments, cancellationToken: token, timeout: timeout);
+                var pyResult = await PythonRunner.RunScriptWSL(scriptPath, arguments: SampleConfig.TestScriptArguments, cancellationToken: token, timeout: timeout);
                 rtbPythonBridge.Text += "Running Python Script in WSL:" + Environment.NewLine;
                 rtbPythonBridge.Text += pyResult.Output + Environment.NewLine;
                 rtbPythonBridge.Text += pyResult.Error + Environment.NewLine;

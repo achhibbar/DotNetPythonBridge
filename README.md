@@ -84,7 +84,7 @@ This repository is primarily C# (library) with a few Python helpers. There is no
 
 Note: the examples below assume you reference the library project or compiled assembly and have a logger configured similar to the repository.
 
-Start a long-running Python service with the base Conda environment and default service options:
+Start a long-running Python service. If no Conda environment is specified, the base environment is used:
 ```csharp
 using DotNetPythonBridge;
 
@@ -98,12 +98,15 @@ Console.WriteLine($"Service started (PID: {service.Pid}) on port {service.Port}"
 await service.Stop();
 ```
 
-Start a long-running Python service in WSL with the default distro, base Conda environment and default service options:
+Start a long-running Python service in WSL with the default distro, a specific Conda environment, and auto-assigned port:
 ```csharp
 using DotNetPythonBridge;
 
+// Get a Conda environment by name from the default WSL distro
+var condaEnv = await CondaManager.GetEnvironmentWSL("my_env");
+
 // Start the service (uses auto-assigned port by default)
-var service = await PythonService.StartWSL(@"path\to\my_service.py");
+var service = await PythonService.StartWSL(@"path\to\my_service.py", condaEnv);
 
 // Get the assigned port and PID from the service
 Console.WriteLine($"Service started (PID: {service.Pid}) on port {service.Port}");
@@ -115,7 +118,6 @@ await service.Stop();
 Run a Python script and capture output:
 ```csharp
 using DotNetPythonBridge;
-using DotNetPythonBridge.Utils;
 
 // Get a Conda environment by name
 var condaEnv = await CondaManager.GetEnvironment("my_env");
@@ -149,12 +151,6 @@ foreach(var env in envs)
 Create environment from YAML:
 ```csharp
 await CondaManager.CreateEnvironment("env.yml"); // calls conda env create -f "env.yml"
-```
-
-Run a command inside WSL:
-```csharp
-// The library contains WSL helper utilities. Example usage differs depending on target.
-// See WSL_Helper methods in the repo for specifics.
 ```
 
 ---

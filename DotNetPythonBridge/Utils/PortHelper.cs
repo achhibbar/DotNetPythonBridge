@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("DotNetPythonBridge.Tests")]
-[assembly: InternalsVisibleTo("DotNetPythonBridgeUI")]
+[assembly: InternalsVisibleTo("DotNetPythonBridge.SampleApp")]
 
 namespace DotNetPythonBridge.Utils
 {

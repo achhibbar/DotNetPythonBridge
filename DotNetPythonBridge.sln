@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetPythonBridge", "DotNe
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetPythonBridge.Tests", "DotNetPythonBridge.Tests\DotNetPythonBridge.Tests.csproj", "{DF7E7301-C6FA-4D24-84E9-65D4902782DC}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetPythonBridgeUI", "DotNetPythonBridgeUI\DotNetPythonBridgeUI.csproj", "{0B765470-068C-4AB7-9E9B-3345DFB4A8FB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetPythonBridge.SampleApp", "DotNetPythonBridgeUI\DotNetPythonBridge.SampleApp.csproj", "{0B765470-068C-4AB7-9E9B-3345DFB4A8FB}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B0114892-5DF6-4530-BBDA-23458A2CB380}"
 	ProjectSection(SolutionItems) = preProject

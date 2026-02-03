@@ -1,4 +1,4 @@
-namespace DotNetPythonBridgeUI
+namespace DotNetPythonBridge.SampleApp
 {
     internal static class Program
     {

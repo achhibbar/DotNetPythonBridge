@@ -1,7 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("DotNetPythonBridge.Tests")]
-[assembly: InternalsVisibleTo("DotNetPythonBridgeUI")]
+[assembly: InternalsVisibleTo("DotNetPythonBridge.SampleApp")]
 
 namespace DotNetPythonBridge.Utils
 {

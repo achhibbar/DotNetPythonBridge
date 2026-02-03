@@ -36,7 +36,8 @@ namespace DotNetPythonBridge
         /// <returns>The current instance of <see cref="DotNetPythonBridgeOptions"/>.</returns>
         public DotNetPythonBridgeOptions WithWSLDistro(string distro) { DefaultWSLDistro = distro; return this; }
         /// <summary>
-        /// Sets the default conda path inside WSL.
+        /// Sets the default conda path inside WSL. Can be WSL path e.g. "/home/username/miniconda3/bin/conda".
+        /// Or the equivalent Windows path e.g. @"\\wsl$\Ubuntu-20.04\home\username\miniconda3\bin\conda".
         /// </summary>
         /// <param name="path">The path to conda inside WSL.</param>
         /// <returns>The current instance of <see cref="DotNetPythonBridgeOptions"/>.</returns>

@@ -302,108 +302,31 @@ namespace DotNetPythonBridge.Tests
         }
     }
 
-    //public class WSL_HelperTests
-    //{
-    //    [Fact]
-    //    public void ListDistros_ShouldReturnAtLeastOne()
-    //    {
-    //        var distros = WSL_Helper.GetWSLDistros();
-    //        Assert.NotEmpty(distros.Distros);
-    //    }
+    public class WSL_HelperTests
+    {
+        [Fact]
+        public void GetEnvironment_NonExistentEnv_ShouldReturnNull()
+        {
+            var env = CondaManager.GetEnvironment("ThisEnvDoesNotExist12345");
+            Assert.Null(env);
+        }
 
-    //    [Fact]
-    //    public void GetDefaultDistro_ShouldReturnNonNull()
-    //    {
-    //        var distros = WSL_Helper.GetWSLDistros();
-    //        var defaultDistro = distros.Distros.FirstOrDefault(d => d.IsDefault);
-    //        Assert.NotNull(defaultDistro);
-    //    }
-    //}
+        //test the portHelper
+        [Fact]
+        public void GetFreePort_ShouldReturnAvailablePort()
+        {
+            int port = PortHelper.GetFreePort();
+            Assert.InRange(port, 1024, 65535); // Valid port range
+            Assert.True(PortHelper.checkIfPortIsFree(port));
+        }
 
-    //public class CondaManagerTests
-    //{
-    //    [Fact]
-    //    public void ListEnvironments_ShouldReturnAtLeastOne()
-    //    {
-    //        var envs = CondaManager.ListEnvironments();
-    //        Assert.NotEmpty(envs);
-    //    }
-
-    //    [Fact]
-    //    public void GetEnvironment_ShouldReturnValidPath()
-    //    {
-    //        var envs = CondaManager.ListEnvironments();
-    //        var firstEnv = envs.FirstOrDefault();
-    //        if (firstEnv != null)
-    //        {
-    //            Assert.True(Directory.Exists(firstEnv.Path));
-    //        }
-    //    }
-
-    //    [Fact]
-    //    public void GetCondaPath_ShouldReturnValidPath()
-    //    {
-    //        var condaPath = CondaManager.GetCondaPath();
-    //        Assert.True(File.Exists(condaPath));
-    //    }
-
-    //    [Fact]
-    //    public void GetEnvironment_NonExistentEnv_ShouldReturnNull()
-    //    {
-    //        var env = CondaManager.GetEnvironment("ThisEnvDoesNotExist12345");
-    //        Assert.Null(env);
-    //    }
-
-    //    //test the portHelper
-    //    [Fact]
-    //    public void GetFreePort_ShouldReturnAvailablePort()
-    //    {
-    //        int port = PortHelper.GetFreePort();
-    //        Assert.InRange(port, 1024, 65535); // Valid port range
-    //        Assert.True(PortHelper.checkIfPortIsFree(port));
-    //    }
-
-    //    [Fact]
-    //    public void GetEnvironment_NullOrEmpty_ShouldReturnNull()
-    //    {
-    //        var envNull = CondaManager.GetEnvironment(null);
-    //        var envEmpty = CondaManager.GetEnvironment(string.Empty);
-    //        Assert.Null(envNull);
-    //        Assert.Null(envEmpty);
-    //    }
-
-    //    [Fact]
-    //    public void ListEnvironments_ShouldHandleNoEnvsGracefully()
-    //    {
-    //        // This test assumes that there is a way to simulate no environments.
-    //        // If not, this test may need to be adjusted or removed.
-    //        var originalCondaPath = CondaManager.GetCondaPath();
-    //        try
-    //        {
-    //            // Temporarily change the conda path to an invalid one
-    //            typeof(CondaManager).GetField("condaPath", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic)
-    //                .SetValue(null, "C:\\InvalidPath\\conda.exe");
-
-    //            var envs = CondaManager.ListEnvironments();
-    //            Assert.Empty(envs);
-    //        }
-    //        finally
-    //        {
-    //            // Restore the original conda path
-    //            typeof(CondaManager).GetField("condaPath", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic)
-    //                .SetValue(null, originalCondaPath);
-    //        }
-    //    }
-
-    //    [Fact]
-    //    public void ListEnvironments_ShouldReturnCorrectProperties()
-    //    {
-    //        var envs = CondaManager.ListEnvironments();
-    //        foreach (var env in envs)
-    //        {
-    //            Assert.False(string.IsNullOrWhiteSpace(env.Name));
-    //            Assert.True(Directory.Exists(env.Path));
-    //        }
-    //    }
-    //}
+        [Fact]
+        public void GetEnvironment_NullOrEmpty_ShouldReturnNull()
+        {
+            var envNull = CondaManager.GetEnvironment(null);
+            var envEmpty = CondaManager.GetEnvironment(string.Empty);
+            Assert.Null(envNull);
+            Assert.Null(envEmpty);
+        }
+    }
 }

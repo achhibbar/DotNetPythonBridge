@@ -1,4 +1,4 @@
-﻿namespace DotNetPythonBridgeUI
+﻿namespace DotNetPythonBridge.SampleApp
 {
     partial class Form1
     {

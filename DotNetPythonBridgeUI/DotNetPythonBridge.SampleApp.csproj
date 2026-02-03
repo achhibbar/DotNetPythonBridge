@@ -17,4 +17,16 @@
     <ProjectReference Include="..\DotNetPythonBridge\DotNetPythonBridge.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="testCondaEnvCreate.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="TestScript2.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="TestService.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
