@@ -1,6 +1,6 @@
 ﻿# DotNetPythonBridge
 
-DotNetPythonBridge is a .NET library designed to make Python integration boring, reliable, and production-ready.
+DotNetPythonBridge is a .NET runtime layer for executing and managing Python processes, environments, and services across Windows and WSL.
 
 If you’ve ever struggled with:
 - Hard-coded Python or Conda paths
@@ -84,41 +84,53 @@ This repository is primarily C# (library) with a few Python helpers. There is no
 
 Note: the examples below assume you reference the library project or compiled assembly and have a logger configured similar to the repository.
 
+Start a long-running Python service with the base Conda environment and default service options:
+```csharp
+using DotNetPythonBridge;
+
+// Start the service (uses auto-assigned port by default)
+var service = await PythonService.Start(@"path\to\my_service.py");
+
+// Get the assigned port and PID from the service
+Console.WriteLine($"Service started (PID: {service.Pid}) on port {service.Port}");
+
+// When finished with the service, stop it (this will dispose resources)
+await service.Stop();
+```
+
+Start a long-running Python service in WSL with the default distro, base Conda environment and default service options:
+```csharp
+using DotNetPythonBridge;
+
+// Start the service (uses auto-assigned port by default)
+var service = await PythonService.StartWSL(@"path\to\my_service.py");
+
+// Get the assigned port and PID from the service
+Console.WriteLine($"Service started (PID: {service.Pid}) on port {service.Port}");
+
+// When finished with the service, stop it (this will dispose resources)
+await service.Stop();
+```
+
 Run a Python script and capture output:
 ```csharp
 using DotNetPythonBridge;
 using DotNetPythonBridge.Utils;
 
-// Run a script with arguments
-var result = await ProcessHelper.RunProcess("python", "script.py --arg1 value");
-if (result.ExitCode == 0)
+// Get a Conda environment by name
+var condaEnv = await CondaManager.GetEnvironment("my_env");
+
+// Arguments for the script
+string[] arguments = new string[] { "--arg1", "value" };
+
+// Run a script with arguments using the specified Conda environment
+var result = await PythonRunner.RunScript("path/to/my_script.py", condaEnv, arguments);
+
+// Check for error using result.Error, and if no error, print output
+if (string.IsNullOrEmpty(result.Error))
 {
-    Console.WriteLine(result.Output);
+	Console.WriteLine($"Output: {result.Output}");
 }
-else
-{
-    Console.Error.WriteLine(result.Error);
-}
-```
-
-Start a long-running Python service (with retries + health check):
-```csharp
-using DotNetPythonBridge;
-
-// Start will attempt up to PythonServiceOptions.ServiceRetryCount retries if the health-check fails
-var options = new PythonServiceOptions()
-    .WithPort(0) // 0 = auto; library will pick a free port (with reservation/retry)
-    .WithServiceArgs("--host 127.0.0.1")
-    .WithServiceRetryCount(3)
-    .EnableHealthCheck(true);
-
-var service = await PythonService.Start("path/to/my_service.py", env: null, options: options);
-
-// Use the service
-Console.WriteLine($"Service started (PID: {service.Pid}) on port {service.Port}");
-
-// When finished
-await service.Stop();
 ```
 
 List Conda environments:
