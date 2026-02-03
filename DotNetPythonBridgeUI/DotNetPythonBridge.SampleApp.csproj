@@ -21,7 +21,7 @@
     <None Update="testCondaEnvCreate.yml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TestScript2.py">
+    <None Update="TestScript.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="TestService.py">

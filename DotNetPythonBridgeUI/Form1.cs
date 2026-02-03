@@ -14,7 +14,7 @@ namespace DotNetPythonBridge.SampleApp
         // The path to a test Python service script e.g., @"C:\Path\To\TestService.py"
         public static string TestServiceScriptPath = "TestService.py";
         // The path to a test Python script e.g., @"C:\Path\To\TestScript.py"
-        public static string TestScriptPath = "TestScript2.py";
+        public static string TestScriptPath = "TestScript.py";
         // The arguments to pass to the test script (if any)
         public static string[] TestScriptArguments = new string[] { "First_Name", "Surname" };
         // The path to a test conda environment YAML file e.g., @"C:\Path\To\testCondaEnvCreate.yml"
