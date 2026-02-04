@@ -79,45 +79,18 @@ namespace DotNetPythonBridge.SampleApp
 
         private async void btnListEnvs_Click(object sender, EventArgs e)
         {
-            //var envs = await CondaManager.ListEnvironments();
+            var envs = await CondaManager.ListEnvironments();
 
-            ////add the envs to the richTextBox
-            //rtbPythonBridge.Text = string.Join(Environment.NewLine, envs) + Environment.NewLine;
+            //add the envs to the richTextBox
+            rtbPythonBridge.Text = string.Join(Environment.NewLine, envs) + Environment.NewLine;
 
-            //rtbPythonBridge.Text += Environment.NewLine;
+            rtbPythonBridge.Text += Environment.NewLine;
 
-            //rtbPythonBridge.Text += CondaManager.GetCondaOrMambaPath() + Environment.NewLine;
+            //get a specific env
+            var env = await CondaManager.GetEnvironment(SampleConfig.CondaEnvName);
+            rtbPythonBridge.Text += env.Name + Environment.NewLine + env.Path + Environment.NewLine + env.WSL_Distro + Environment.NewLine;
 
-            //rtbPythonBridge.Text += Environment.NewLine;
-
-            ////get a specific env
-            //Task<PythonEnvironment> env = CondaManager.GetEnvironment(SampleConfig.CondaEnvName);
-            //rtbPythonBridge.Text += env + Environment.NewLine;
-
-            //rtbPythonBridge.Text += Environment.NewLine;
-
-
-
-            //var pyResult = await PythonRunner.RunCode(await env, "import sys; print(sys.executable)");
-            //rtbPythonBridge.Text += pyResult.Output + Environment.NewLine;
-
-            //// Try another code snippet with an output
-            //pyResult = await PythonRunner.RunCode(await env, "for i in range(5): print(f'Line {i}')");
-            //rtbPythonBridge.Text += pyResult.Output + Environment.NewLine;
-
-            //rtbPythonBridge.Text += Environment.NewLine;
-
-
-            //// Start a Python service (make sure you have a suitable script)
-            //env = CondaManager.GetEnvironment("ultralytics-newest-env");
-
-            //options.DefaultPort = 8080;
-            //using var service = await PythonService.Start(await env, SampleConfig.TestServiceScriptPath, options);
-
-            //// Health check
-            //using var client = new HttpClient();
-            //var resp = await client.GetStringAsync($"http://127.0.0.1:{service.Port}/health");
-            //Console.WriteLine(resp);
+            rtbPythonBridge.Text += Environment.NewLine;
         }
 
         private void btnTestPorts_Click(object sender, EventArgs e)
