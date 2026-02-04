@@ -1,6 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <PackageId>DotNetPythonBridge</PackageId>
+    <Version>1.0.0-beta.1</Version>
+    <Authors>Ashutosh Chhibbar</Authors>
+    <Description>DotNetPythonBridge is a .NET runtime layer for executing and managing Python processes, environments, and services across Windows and WSL.</Description>
+    <PackageTags>python;conda;wsl;dotnet;process</PackageTags>
+    <RepositoryUrl>https://github.com/achhibbar/DotNetPythonBridge</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/achhibbar/DotNetPythonBridge</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
@@ -8,6 +19,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="LICENSE.md" Pack="true" PackagePath="" />
+    <None Include="COMMERCIAL_LICENSE.md" Pack="true" PackagePath="" />
+    <None Include="LICENSING_FAQ.md" Pack="true" PackagePath="" />
+    <None Include="README.md" Pack="true" PackagePath="" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.9" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.9" />
   </ItemGroup>
