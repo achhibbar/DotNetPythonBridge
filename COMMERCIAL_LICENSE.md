@@ -17,4 +17,4 @@ Commercial licenses will be available via:
 > 🔗 Lemon Squeezy (coming soon)
 
 Until then, please contact:
-> [your-email@example.com]
+> dotnetpythonbridge@gmail.com

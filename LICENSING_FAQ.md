@@ -18,4 +18,4 @@ Yes. Evaluation and testing are allowed under the non-commercial license.
 No, as long as the use is non-commercial.
 
 ### What if I'm unsure whether my use is commercial?
-Contact us at ashchhibbar@gmail.com
+Contact us at dotnetpythonbridge@gmail.com

@@ -268,7 +268,7 @@ Commercial licenses are available here:
 > 🔗 **[Link coming soon — Lemon Squeezy]**
 
 Until the commercial license page is live, please contact:
-> **[your-email@example.com]**
+> **dotnetpythonbridge@gmail.com**
 
 ### Why this model?
 
