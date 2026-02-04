@@ -9,6 +9,7 @@ namespace DotNetPythonBridge.SampleApp
     public static class SampleConfig
     {
         // Update these values for your environment
+
         // The name of an existing conda environment to test with
         public static string CondaEnvName = "SimpleITK_OpenCV_env";
         // The path to a test Python service script e.g., @"C:\Path\To\TestService.py"
@@ -33,9 +34,13 @@ namespace DotNetPythonBridge.SampleApp
 
     public partial class Form1 : Form
     {
+        // Logger factory for logging
         private readonly ILoggerFactory _loggerFactory;
+        // Options for DotNetPythonBridge
         private readonly DotNetPythonBridgeOptions options = new DotNetPythonBridgeOptions();
+        // Options for PythonService
         private readonly PythonServiceOptions serviceOptions = new PythonServiceOptions();
+        // Field to track if CondaManager has been initialized
         private bool isCondaInitialized = false;
         // Field to cache WSL distros
         private WSL_Helper.WSL_Distros? distros = null;
