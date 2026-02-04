@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Type="http://schemas.microsoft.com/packaging/2010/07/manifest" Target="/DotNetPythonBridge.nuspec" Id="R23BA26068EC380E5" />
+  <Relationship Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="/package/services/metadata/core-properties/de4b0dd4bc1445be994c9bc62aebfc98.psmdcp" Id="R9F6044F0553CE736" />
+</Relationships>

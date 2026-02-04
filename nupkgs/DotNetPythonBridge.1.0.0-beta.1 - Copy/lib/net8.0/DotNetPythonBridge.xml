@@ -1,0 +1,580 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>DotNetPythonBridge</name>
+    </assembly>
+    <members>
+        <member name="P:DotNetPythonBridge.CondaManager.WSL">
+            <summary>
+            The WSL Distro being used, or null if not using WSL.
+            </summary>
+        </member>
+        <member name="M:DotNetPythonBridge.CondaManager.Initialize(DotNetPythonBridge.DotNetPythonBridgeOptions,System.Boolean)">
+            <summary>
+            Initialize the CondaManager with optional conda path and WSL settings.
+            </summary>
+            <param name="options"></param>
+            <param name="reinitialize"></param>
+            <returns></returns>
+            <exception cref="T:System.IO.FileNotFoundException"></exception>
+            <exception cref="T:System.InvalidOperationException"></exception>
+        </member>
+        <member name="M:DotNetPythonBridge.CondaManager.Reset">
+            <summary>
+            Reset the CondaManager to uninitialized state.
+            </summary>
+        </member>
+        <member name="M:DotNetPythonBridge.CondaManager.GetCondaOrMambaPath">
+            <summary>
+            Get the conda or mamba executable path.
+            </summary>
+            <returns></returns>
+            <exception cref="T:System.IO.FileNotFoundException"></exception>
+        </member>
+        <member name="M:DotNetPythonBridge.CondaManager.GetCondaOrMambaPathWSL(DotNetPythonBridge.Utils.WSL_Helper.WSL_Distro)">
+            <summary>
+            Get the conda or mamba executable path in WSL.
+            </summary>
+            <param name="wSL_Distro"></param>
+            <returns></returns>
+            <exception cref="T:System.InvalidOperationException"></exception>
+            <exception cref="T:System.IO.FileNotFoundException"></exception>
+        </member>
+        <member name="M:DotNetPythonBridge.CondaManager.ListEnvironments(System.Boolean)">
+            <summary>
+            Get the list of conda environments (parsed from conda info --json).
+            </summary>
+            <param name="refresh"></param>
+            <returns></returns>
+            <exception cref="T:System.InvalidOperationException"></exception>
+        </member>
+        <member name="M:DotNetPythonBridge.CondaManager.ListEnvironmentsWSL(DotNetPythonBridge.Utils.WSL_Helper.WSL_Distro,System.Boolean)">
+            <summary>
+            Get the list of conda environments in WSL (parsed from conda info --json).
+            </summary>
+            <param name="wslDistro"></param>
+            <param name="refresh"></param>
+            <returns></returns>
+            <exception cref="T:System.InvalidOperationException"></exception>
+        </member>
+        <member name="M:DotNetPythonBridge.CondaManager.GetEnvironment(System.String)">
+            <summary>
+            Get a specific Conda environment by name.
+            Returns a PythonEnvironment object if found, which includes the path to the environment.
+            </summary>
+            <param name="envName"></param>
+            <returns></returns>
+            <exception cref="T:System.Collections.Generic.KeyNotFoundException"></exception>
+        </member>
+        <member name="M:DotNetPythonBridge.CondaManager.GetEnvironmentWSL(System.String,DotNetPythonBridge.Utils.WSL_Helper.WSL_Distro)">
+            <summary>
+            Get a specific Conda environment by name in WSL.
+            Returns a PythonEnvironment object if found, which includes the path to the environment.
+            </summary>
+            <param name="envName"></param>
+            <param name="wslDistro"></param>
+            <returns></returns>
+            <exception cref="T:System.Collections.Generic.KeyNotFoundException"></exception>
+            <exception cref="T:System.InvalidOperationException"></exception>
+        </member>
+        <member name="M:DotNetPythonBridge.CondaManager.CreateEnvironment(System.String,System.String)">
+            <summary>
+            Create a new Conda environment from YAML file.
+            </summary>
+            <param name="yamlFile"></param>
+            <param name="envName"></param>
+            <returns></returns>
+            <exception cref="T:System.IO.FileNotFoundException"></exception>
+            <exception cref="T:System.InvalidOperationException"></exception>
+        </member>
+        <member name="M:DotNetPythonBridge.CondaManager.CreateEnvironmentWSL(System.String,System.String,DotNetPythonBridge.Utils.WSL_Helper.WSL_Distro)">
+            <summary>
+            Create a new Conda environment from YAML file in WSL.
+            </summary>
+            <param name="yamlFile"></param>
+            <param name="envName"></param>
+            <param name="wslDistro"></param>
+            <returns></returns>
+            <exception cref="T:System.IO.FileNotFoundException"></exception>
+            <exception cref="T:System.InvalidOperationException"></exception>
+        </member>
+        <member name="M:DotNetPythonBridge.CondaManager.DeleteEnvironment(System.String)">
+            <summary>
+            Delete a Conda environment by name.
+            </summary>
+            <param name="envName"></param>
+            <returns></returns>
+            <exception cref="T:System.InvalidOperationException"></exception>
+        </member>
+        <member name="M:DotNetPythonBridge.CondaManager.DeleteEnvironmentWSL(System.String,DotNetPythonBridge.Utils.WSL_Helper.WSL_Distro)">
+            <summary>
+            Delete a Conda environment by name in WSL.
+            </summary>
+            <param name="envName"></param>
+            <param name="wslDistro"></param>
+            <returns></returns>
+            <exception cref="T:System.InvalidOperationException"></exception>
+        </member>
+        <member name="M:DotNetPythonBridge.DotNetPythonBridgeOptions.WithCondaPath(System.String)">
+            <summary>
+            Sets the default conda executable path.
+            </summary>
+            <param name="path">The path to the conda executable.</param>
+            <returns>The current instance of <see cref="T:DotNetPythonBridge.DotNetPythonBridgeOptions"/>.</returns>
+        </member>
+        <member name="M:DotNetPythonBridge.DotNetPythonBridgeOptions.WithWSLDistro(System.String)">
+            <summary>
+            Sets the default WSL distribution name.
+            </summary>
+            <param name="distro">The name of the WSL distribution.</param>
+            <returns>The current instance of <see cref="T:DotNetPythonBridge.DotNetPythonBridgeOptions"/>.</returns>
+        </member>
+        <member name="M:DotNetPythonBridge.DotNetPythonBridgeOptions.WithWSLCondaPath(System.String)">
+            <summary>
+            Sets the default conda path inside WSL. Can be WSL path e.g. "/home/username/miniconda3/bin/conda".
+            Or the equivalent Windows path e.g. @"\\wsl$\Ubuntu-20.04\home\username\miniconda3\bin\conda".
+            </summary>
+            <param name="path">The path to conda inside WSL.</param>
+            <returns>The current instance of <see cref="T:DotNetPythonBridge.DotNetPythonBridgeOptions"/>.</returns>
+        </member>
+        <member name="M:DotNetPythonBridge.DotNetPythonBridgeOptions.WithCondaDetectionTimeout(System.TimeSpan)">
+            <summary>
+            Sets the timeout for conda detection.
+            </summary>
+            <param name="timeout">The timeout duration.</param>
+            <returns>The current instance of <see cref="T:DotNetPythonBridge.DotNetPythonBridgeOptions"/>.</returns>
+        </member>
+        <member name="M:DotNetPythonBridge.DotNetPythonBridgeOptions.WithCondaWhichTimeout(System.TimeSpan)">
+            <summary>
+            Sets the timeout for the 'conda which' command.
+            </summary>
+            <param name="timeout">The timeout duration.</param>
+            <returns>The current instance of <see cref="T:DotNetPythonBridge.DotNetPythonBridgeOptions"/>.</returns>
+        </member>
+        <member name="M:DotNetPythonBridge.DotNetPythonBridgeOptions.WithCondaExecutableCheckTimeout(System.TimeSpan)">
+            <summary>
+            Sets the timeout for checking the conda executable.
+            </summary>
+            <param name="timeout">The timeout duration.</param>
+            <returns>The current instance of <see cref="T:DotNetPythonBridge.DotNetPythonBridgeOptions"/>.</returns>
+        </member>
+        <member name="M:DotNetPythonBridge.DotNetPythonBridgeOptions.WithCondaListEnvironmentsTimeout(System.TimeSpan)">
+            <summary>
+            Sets the timeout for listing conda environments.
+            </summary>
+            <param name="timeout">The timeout duration.</param>
+            <returns>The current instance of <see cref="T:DotNetPythonBridge.DotNetPythonBridgeOptions"/>.</returns>
+        </member>
+        <member name="M:DotNetPythonBridge.DotNetPythonBridgeOptions.WithCondaCreateEnvironmentTimeout(System.TimeSpan)">
+            <summary>
+            Sets the timeout for creating a conda environment.
+            </summary>
+            <param name="timeout">The timeout duration.</param>
+            <returns>The current instance of <see cref="T:DotNetPythonBridge.DotNetPythonBridgeOptions"/>.</returns>
+        </member>
+        <member name="M:DotNetPythonBridge.DotNetPythonBridgeOptions.WithCondaDeleteEnvironmentTimeout(System.TimeSpan)">
+            <summary>
+            Sets the timeout for deleting a conda environment.
+            </summary>
+            <param name="timeout">The timeout duration.</param>
+            <returns>The current instance of <see cref="T:DotNetPythonBridge.DotNetPythonBridgeOptions"/>.</returns>
+        </member>
+        <member name="M:DotNetPythonBridge.DotNetPythonBridgeOptions.WithWSLListDistrosTimeout(System.TimeSpan)">
+            <summary>
+            Sets the timeout for listing WSL distributions.
+            </summary>
+            <param name="timeout">The timeout duration.</param>
+            <returns>The current instance of <see cref="T:DotNetPythonBridge.DotNetPythonBridgeOptions"/>.</returns>
+        </member>
+        <member name="M:DotNetPythonBridge.DotNetPythonBridgeOptions.WithWSLWarmupTimeout(System.TimeSpan)">
+            <summary>
+            Sets the timeout for WSL warmup.
+            </summary>
+            <param name="timeout">The timeout duration.</param>
+            <returns>The current instance of <see cref="T:DotNetPythonBridge.DotNetPythonBridgeOptions"/>.</returns>
+        </member>
+        <member name="M:DotNetPythonBridge.DotNetPythonBridgeOptions.WithWSLDistroDoesFileExistTimeout(System.TimeSpan)">
+            <summary>
+            Sets the timeout for checking if a file exists in the WSL distribution.
+            </summary>
+            <param name="timeout">The timeout duration.</param>
+            <returns>The current instance of <see cref="T:DotNetPythonBridge.DotNetPythonBridgeOptions"/>.</returns>
+        </member>
+        <member name="M:DotNetPythonBridge.DotNetPythonBridgeOptions.WithWSLWarmupRetryDelay(System.TimeSpan)">
+            <summary>
+            Sets the retry delay for WSL warmup.
+            </summary>
+            <param name="delay">The delay duration.</param>
+            <returns>The current instance of <see cref="T:DotNetPythonBridge.DotNetPythonBridgeOptions"/>.</returns>
+        </member>
+        <member name="M:DotNetPythonBridge.DotNetPythonBridgeOptions.WithWSLWarmupRetries(System.Int32)">
+            <summary>
+            Sets the number of retries for WSL warmup.
+            </summary>
+            <param name="retries">The number of retries.</param>
+            <returns>The current instance of <see cref="T:DotNetPythonBridge.DotNetPythonBridgeOptions"/>.</returns>
+        </member>
+        <member name="M:DotNetPythonBridge.DotNetPythonBridgeOptions.WithWSLGetCondaPathRetries(System.Int32)">
+            <summary>
+            Sets the number of retries for getting the conda path in WSL.
+            </summary>
+            <param name="retries">The number of retries.</param>
+            <returns>The current instance of <see cref="T:DotNetPythonBridge.DotNetPythonBridgeOptions"/>.</returns>
+        </member>
+        <member name="M:DotNetPythonBridge.PythonServiceOptions.WithPort(System.Int32)">
+            <summary>
+            Sets the default port for the Python service. A value of 0 means the port will be assigned automatically.
+            </summary>
+            <param name="port">The port number to set.</param>
+            <returns>The current instance of <see cref="T:DotNetPythonBridge.PythonServiceOptions"/>.</returns>
+        </member>
+        <member name="M:DotNetPythonBridge.PythonServiceOptions.WithServiceArgs(System.String)">
+            <summary>
+            Sets the default arguments for the Python service. These arguments will be passed when starting the service.
+            </summary>
+            <param name="args">The service arguments to set.</param>
+            <returns>The current instance of <see cref="T:DotNetPythonBridge.PythonServiceOptions"/>.</returns>
+        </member>
+        <member name="M:DotNetPythonBridge.PythonServiceOptions.EnableHealthCheck(System.Boolean)">
+            <summary>
+            Enables or disables health checks for the Python service. Health checks help ensure the service is running correctly.
+            </summary>
+            <param name="enabled">True to enable health checks; otherwise, false.</param>
+            <returns>The current instance of <see cref="T:DotNetPythonBridge.PythonServiceOptions"/>.</returns>
+        </member>
+        <member name="M:DotNetPythonBridge.PythonServiceOptions.WithServiceRetryCount(System.Int32)">
+            <summary>
+            Sets the number of retries for the Python service in case of failure. This helps in making the service more resilient.
+            </summary>
+            <param name="count">The number of retry attempts to set.</param>
+            <returns>The current instance of <see cref="T:DotNetPythonBridge.PythonServiceOptions"/>.</returns>
+        </member>
+        <member name="M:DotNetPythonBridge.PythonServiceOptions.WithHealthCheckTimeout(System.TimeSpan)">
+            <summary>
+            Sets the timeout duration for health checks. This defines how long to wait for a health check response before timing out.
+            </summary>
+            <param name="timeout">The timeout duration to set.</param>
+            <returns>The current instance of <see cref="T:DotNetPythonBridge.PythonServiceOptions"/>.</returns>
+        </member>
+        <member name="M:DotNetPythonBridge.PythonServiceOptions.WithForceKillTimeout(System.TimeSpan)">
+            <summary>
+            Sets the timeout duration for forcefully killing the Python service. This is used when the service does not respond.
+            </summary>
+            <param name="timeout">The timeout duration to set.</param>
+            <returns>The current instance of <see cref="T:DotNetPythonBridge.PythonServiceOptions"/>.</returns>
+        </member>
+        <member name="M:DotNetPythonBridge.PythonServiceOptions.WithStopTimeout(System.TimeSpan)">
+            <summary>
+            Sets the timeout duration for stopping the Python service gracefully. This allows the service to shut down properly.
+            </summary>
+            <param name="timeout">The timeout duration to set.</param>
+            <returns>The current instance of <see cref="T:DotNetPythonBridge.PythonServiceOptions"/>.</returns>
+        </member>
+        <member name="M:DotNetPythonBridge.PythonServiceOptions.WithHealthCheckRetryDelay(System.TimeSpan)">
+            <summary>
+            Sets the delay duration between health check retries. This helps in managing the frequency of health checks.
+            </summary>
+            <param name="delay">The delay duration to set.</param>
+            <returns>The current instance of <see cref="T:DotNetPythonBridge.PythonServiceOptions"/>.</returns>
+        </member>
+        <member name="M:DotNetPythonBridge.PythonServiceOptions.WithProcessStoppedCheckDelay(System.TimeSpan)">
+            <summary>
+            Sets the delay duration for checking if the process has stopped. This helps in ensuring the process is monitored effectively.
+            </summary>
+            <param name="delay">The delay duration to set.</param>
+            <returns>The current instance of <see cref="T:DotNetPythonBridge.PythonServiceOptions"/>.</returns>
+        </member>
+        <member name="T:DotNetPythonBridge.PythonEnvironment">
+            <summary>
+            Represents a Conda environment, either local or WSL.
+            </summary>
+        </member>
+        <member name="T:DotNetPythonBridge.PythonEnvironments">
+            <summary>
+            Holds a collection of Conda environments.
+            </summary>
+        </member>
+        <member name="T:DotNetPythonBridge.PythonResult">
+            <summary>
+            Holds the result of executing a Python script or command.
+            </summary>
+        </member>
+        <member name="M:DotNetPythonBridge.PythonRunner.RunScript(System.String,DotNetPythonBridge.PythonEnvironment,System.String[],System.Threading.CancellationToken,System.Nullable{System.TimeSpan})">
+            <summary>
+            Run a Python script inside the given Conda environment.
+            </summary>
+            <param name="scriptPath"></param>
+            <param name="env"></param>
+            <param name="arguments"></param>
+            <param name="cancellationToken"></param>
+            <param name="timeout"></param>
+            <returns></returns>
+            <exception cref="T:System.IO.FileNotFoundException"></exception>
+            <exception cref="T:System.InvalidOperationException"></exception>
+        </member>
+        <member name="M:DotNetPythonBridge.PythonRunner.RunScriptWSL(System.String,DotNetPythonBridge.PythonEnvironment,DotNetPythonBridge.Utils.WSL_Helper.WSL_Distro,System.String[],System.Threading.CancellationToken,System.Nullable{System.TimeSpan})">
+            <summary>
+            Run a Python script inside the given Conda environment in WSL.
+            </summary>
+            <param name="scriptPath"></param>
+            <param name="env"></param>
+            <param name="wSL_Distro"></param>
+            <param name="arguments"></param>
+            <param name="cancellationToken"></param>
+            <param name="timeout"></param>
+            <returns></returns>
+            <exception cref="T:System.IO.FileNotFoundException"></exception>
+            <exception cref="T:System.InvalidOperationException"></exception>
+        </member>
+        <member name="M:DotNetPythonBridge.PythonRunner.RunCode(System.String,DotNetPythonBridge.PythonEnvironment,System.Threading.CancellationToken,System.Nullable{System.TimeSpan})">
+            <summary>
+            Run inline Python code inside the given Conda environment.
+            </summary>
+            <param name="code"></param>
+            <param name="env"></param>
+            <param name="cancellationToken"></param>
+            <param name="timeout"></param>
+            <returns></returns>
+            <exception cref="T:System.InvalidOperationException"></exception>
+        </member>
+        <member name="M:DotNetPythonBridge.PythonRunner.RunCodeWSL(System.String,DotNetPythonBridge.PythonEnvironment,DotNetPythonBridge.Utils.WSL_Helper.WSL_Distro,System.Threading.CancellationToken,System.Nullable{System.TimeSpan})">
+            <summary>
+            Run inline Python code inside the given Conda environment in WSL.
+            </summary>
+            <param name="code"></param>
+            <param name="env"></param>
+            <param name="wSL_Distro"></param>
+            <param name="cancellationToken"></param>
+            <param name="timeout"></param>
+            <returns></returns>
+            <exception cref="T:System.InvalidOperationException"></exception>
+        </member>
+        <member name="M:DotNetPythonBridge.PythonRunner.GetPythonExecutable(DotNetPythonBridge.PythonEnvironment)">
+            <summary>
+            Resolve the correct python executable path for the Conda environment.
+            </summary>
+            <param name="env"></param>
+            <returns></returns>
+            <exception cref="T:System.InvalidOperationException"></exception>
+            <exception cref="T:System.IO.FileNotFoundException"></exception>
+        </member>
+        <member name="M:DotNetPythonBridge.PythonRunner.GetPythonExecutableWSL(DotNetPythonBridge.PythonEnvironment,DotNetPythonBridge.Utils.WSL_Helper.WSL_Distro)">
+            <summary>
+            Resolve the correct python executable path for the Conda environment in WSL.
+            </summary>
+            <param name="env"></param>
+            <param name="wSL_Distro"></param>
+            <returns></returns>
+            <exception cref="T:System.InvalidOperationException"></exception>
+            <exception cref="T:System.IO.FileNotFoundException"></exception>
+        </member>
+        <member name="T:DotNetPythonBridge.PythonServiceHandle">
+            <summary>
+            Wrapper handle for managing the lifecycle of a PythonService.
+            </summary>
+        </member>
+        <member name="P:DotNetPythonBridge.PythonServiceHandle.Service">
+            <summary>
+            The underlying Python service.
+            </summary>
+        </member>
+        <member name="M:DotNetPythonBridge.PythonServiceHandle.#ctor(DotNetPythonBridge.PythonService)">
+            <summary>
+            Handle for managing the lifecycle of a PythonService.
+            </summary>
+            <param name="service"></param>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:DotNetPythonBridge.PythonServiceHandle.Dispose">
+            <summary>
+            Dispose the underlying Python service.
+            </summary>
+        </member>
+        <member name="M:DotNetPythonBridge.PythonServiceHandle.DisposeAsync">
+            <summary>
+            Asynchronously dispose the underlying Python service.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:DotNetPythonBridge.PythonService.Start(System.String,DotNetPythonBridge.PythonEnvironment,DotNetPythonBridge.PythonServiceOptions,System.Threading.CancellationToken,System.Nullable{System.TimeSpan})">
+            <summary>
+            Start a long-running Python service inside the given conda environment.
+            </summary>
+            <param name="scriptPath"></param>
+            <param name="env"></param>
+            <param name="options"></param>
+            <param name="cancellationToken"></param>
+            <param name="timeout"></param>
+            <returns></returns>
+            <exception cref="T:System.IO.FileNotFoundException"></exception>
+            <exception cref="T:System.InvalidOperationException"></exception>
+        </member>
+        <member name="M:DotNetPythonBridge.PythonService.StartWSL(System.String,DotNetPythonBridge.PythonEnvironment,DotNetPythonBridge.PythonServiceOptions,DotNetPythonBridge.Utils.WSL_Helper.WSL_Distro,System.Threading.CancellationToken,System.Nullable{System.TimeSpan})">
+            <summary>
+            Start a long-running Python service inside the given conda environment.
+            </summary>
+            <param name="scriptPath"></param>
+            <param name="env"></param>
+            <param name="options"></param>
+            <param name="wsl"></param>
+            <returns></returns>
+            <exception cref="T:System.IO.FileNotFoundException"></exception>
+            <exception cref="T:System.Exception"></exception>
+        </member>
+        <member name="M:DotNetPythonBridge.PythonService.WaitForHealthCheck(DotNetPythonBridge.PythonServiceOptions,System.Threading.CancellationToken)">
+            <summary>
+            Check the health of the Python service by polling the /health endpoint until timeout.
+            </summary>
+            <param name="options"></param>
+            <param name="cancellationToken"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DotNetPythonBridge.PythonService.Stop(DotNetPythonBridge.PythonServiceOptions)">
+            <summary>
+            Stop and dispose the Python service.
+            </summary>
+            <param name="options"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DotNetPythonBridge.PythonService.Dispose">
+            <summary>
+            Stop and synchronously dispose the Python service.
+            </summary>
+        </member>
+        <member name="M:DotNetPythonBridge.PythonService.DisposeAsync">
+            <summary>
+            Stop and asynchronously dispose the Python service.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:DotNetPythonBridge.Utils.BashCommandBuilder.BashEscapeInlinePythonCode(System.String)">
+            <summary>
+            Escapes inline Python code so it can be safely passed to: 
+            bash -lic "/path/to/python -c '...python code...'"
+            Uses single quotes on the bash side
+            </summary>
+        </member>
+        <member name="M:DotNetPythonBridge.Utils.BashCommandBuilder.BuildBashStartServiceCommand(System.String,System.String,System.Int32,DotNetPythonBridge.PythonServiceOptions)">
+            <summary>
+            for launching service via bash -lc '...'
+            </summary>
+            <param name="pythonExe"></param>
+            <param name="wslScriptPath"></param>
+            <param name="port"></param>
+            <param name="options"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DotNetPythonBridge.Utils.BashCommandBuilder.BuildBashCondaCommand(System.String,System.String)">
+            <summary>
+            for launching conda commands via bash -lc '...'
+            </summary>
+            <param name="condaPath"></param>
+            <param name="args"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DotNetPythonBridge.Utils.BashCommandBuilder.BuildBashCreateCondaEnvCmd(System.String,System.String,System.String)">
+            <summary>
+            Builds a bash command string to create a Conda environment, properly escaping arguments.
+            </summary>
+            <param name="condaPath">The full path to the conda or mamba executable.</param>
+            <param name="yamlFile">The path to the YAML file.</param>
+            <param name="envName">Optional environment name to override the YAML.</param>
+            <returns>A bash command string suitable for use with WSL.</returns>
+        </member>
+        <member name="T:DotNetPythonBridge.Utils.PortHelper">
+            <summary>
+            Port related helper methods that are cross platform (Windows, Linux, MacOS).
+            </summary>
+        </member>
+        <member name="M:DotNetPythonBridge.Utils.PortHelper.GetFreePort">
+            <summary>
+            Get a free TCP port on the local machine.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:DotNetPythonBridge.Utils.PortHelper.GetAndBindFreePort">
+            <summary>
+            get a free TCP port on the local machine and bind to it, returning the TcpListener
+            </summary>
+        </member>
+        <member name="M:DotNetPythonBridge.Utils.ProcessHelper.RunProcess(System.String,System.Collections.Generic.IEnumerable{System.String},System.Threading.CancellationToken,System.Nullable{System.TimeSpan},System.Text.Encoding)">
+            <summary>
+            Runner for processes with arg list
+            </summary>
+            <param name="file"></param>
+            <param name="arguments"></param>
+            <param name="cancellationToken"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DotNetPythonBridge.Utils.ProcessHelper.RunProcess(System.String,System.String,System.Threading.CancellationToken,System.Nullable{System.TimeSpan},System.Text.Encoding)">
+            <summary>
+            Wrapper for RunProcess with string args
+            </summary>
+            <param name="file"></param>
+            <param name="args"></param>
+            <param name="cancellationToken"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DotNetPythonBridge.Utils.ProcessHelper.RunProcessInternal(System.Diagnostics.ProcessStartInfo,System.Threading.CancellationToken,System.Nullable{System.TimeSpan})">
+            <summary>
+            Start and run a process, capturing output and error.
+            </summary>
+            <param name="psi"></param>
+            <param name="cancellationToken"></param>
+            <returns></returns>
+            <exception cref="T:System.Exception"></exception>
+        </member>
+        <member name="M:DotNetPythonBridge.Utils.ProcessHelper.StartProcess(System.String,System.Collections.Generic.IEnumerable{System.String},System.Threading.CancellationToken,System.Nullable{System.TimeSpan},System.Action{System.String},System.Action{System.String},System.Text.Encoding)">
+            <summary>
+            Starter for processes with arg list used for long-running processes
+            </summary>
+            <param name="file"></param>
+            <param name="arguments"></param>
+            <param name="cancellationToken"></param>
+            <param name="onOutput"></param>
+            <param name="onError"></param>
+            <returns></returns>
+        </member>
+        <!-- Badly formed XML comment ignored for member "M:DotNetPythonBridge.Utils.ProcessHelper.StartProcess(System.String,System.String,System.Threading.CancellationToken,System.Nullable{System.TimeSpan},System.Action{System.String},System.Action{System.String},System.Text.Encoding)" -->
+        <member name="M:DotNetPythonBridge.Utils.ProcessHelper.StartProcessInternal(System.Diagnostics.ProcessStartInfo,System.Threading.CancellationToken,System.Action{System.String},System.Action{System.String},System.Nullable{System.TimeSpan})">
+            <summary>
+            Start and run a process, capturing output and error via callbacks. Used for long-running processes.
+            </summary>
+            <param name="psi"></param>
+            <param name="cancellationToken"></param>
+            <param name="onOutput"></param>
+            <param name="onError"></param>
+            <param name="timeout"></param>
+            <returns></returns>
+            <exception cref="T:System.Exception"></exception>
+        </member>
+        <member name="M:DotNetPythonBridge.Utils.WSL_Helper.GetWSLDistros(System.Boolean,System.Nullable{System.TimeSpan},System.Nullable{System.TimeSpan})">
+            <summary>
+            Get the list of WSL distros available on the system.
+            </summary>
+            <param name="refresh"></param>
+            <param name="listDistrosTimeout"></param>
+            <param name="wslWarmupTimeout"></param>
+            <returns></returns>
+            <exception cref="T:System.PlatformNotSupportedException"></exception>
+            <exception cref="T:System.InvalidOperationException"></exception>
+        </member>
+        <member name="M:DotNetPythonBridge.Utils.WSL_Helper.WarmupWSL_Distro(DotNetPythonBridge.Utils.WSL_Helper.WSL_Distro,System.Nullable{System.TimeSpan})">
+            <summary>
+            warm up a WSL distro by running a simple command in it in case it's not running.
+            </summary>
+            <param name="wslDistro"></param>
+            <param name="wslWarmupTimeout"></param>
+            <returns></returns>
+            <exception cref="T:System.InvalidOperationException"></exception>
+        </member>
+        <member name="M:DotNetPythonBridge.Utils.WSL_Helper.WarmupWSL_Distro(System.String,System.Nullable{System.TimeSpan})">
+            <summary>
+            a warm up a WSL distro by name by running a simple command in it in case it's not running.
+            used when the developer only has the distro name and not the WSL_Distro object.
+            </summary>
+            <param name="wslDistroName"></param>
+            <returns></returns>
+        </member>
+    </members>
+</doc>
