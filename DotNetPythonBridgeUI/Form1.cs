@@ -1,37 +1,9 @@
 using DotNetPythonBridge;
 using DotNetPythonBridge.Utils;
 using Microsoft.Extensions.Logging;
-using static DotNetPythonBridge.Utils.WSL_Helper;
 
 namespace DotNetPythonBridge.SampleApp
 {
-    // Add this at the top of your Form1 class
-    public static class SampleConfig
-    {
-        // Update these values for your environment
-
-        // The name of an existing conda environment to test with
-        public static string CondaEnvName = "SimpleITK_OpenCV_env";
-        // The path to a test Python service script e.g., @"C:\Path\To\TestService.py"
-        public static string TestServiceScriptPath = "TestService.py";
-        // The path to a test Python script e.g., @"C:\Path\To\TestScript.py"
-        public static string TestScriptPath = "TestScript.py";
-        // The arguments to pass to the test script (if any)
-        public static string[] TestScriptArguments = new string[] { "First_Name", "Surname" };
-        // The path to a test conda environment YAML file e.g., @"C:\Path\To\testCondaEnvCreate.yml"
-        public static string CondaEnvYamlPath = "testCondaEnvCreate.yml";
-        // If the name of the new conda environment is not specified in the YAML, this name can be used
-        public static string NewCondaEnvName = "DotNetPythonBridgeTest-env";
-        // The default WSL distro to use when initializing WSL-related functionality manually
-        public static string DefaultWSLDistro = "Ubuntu";
-        // The default conda paths for manual initialization
-        public static string DefaultCondaPath = @"C:\Users\Ash\miniconda3\Scripts\conda.exe";
-        // The default WSL conda path for manual initialization
-        // Can either be the Linux path e.g., "/home/username/miniconda3/bin/conda"
-        // or the Windows path to the WSL filesystem e.g., @"\\wsl$\Ubuntu\home\username\miniconda3\bin\conda.exe"
-        public static string DefaultWSLCondaPath = @"/home/achhibbar/miniconda3/bin/conda";
-    }
-
     public partial class Form1 : Form
     {
         // Logger factory for logging
@@ -79,33 +51,34 @@ namespace DotNetPythonBridge.SampleApp
 
         private async void btnListEnvs_Click(object sender, EventArgs e)
         {
+            // get native conda envs
             var envs = await CondaManager.ListEnvironments();
 
             //add the envs to the richTextBox
+            rtbPythonBridge.Text = "Conda Envs:" + Environment.NewLine;
             rtbPythonBridge.Text = string.Join(Environment.NewLine, envs) + Environment.NewLine;
-
             rtbPythonBridge.Text += Environment.NewLine;
 
-            //get a specific env
+            //get a specific env. This env can then be used to run scripts, start services, etc.
             var env = await CondaManager.GetEnvironment(SampleConfig.CondaEnvName);
+            // add the env details to the richTextBox
             rtbPythonBridge.Text += env.Name + Environment.NewLine + env.Path + Environment.NewLine + env.WSL_Distro + Environment.NewLine;
 
             rtbPythonBridge.Text += Environment.NewLine;
-        }
 
-        private void btnTestPorts_Click(object sender, EventArgs e)
-        {
-            //get a free port
-            rtbPythonBridge.Text += "Testing Ports..." + Environment.NewLine;
-            int freePort = PortHelper.GetFreePort();
-            rtbPythonBridge.Text += "Free Port: " + freePort.ToString();
 
+            //get wsl conda envs
+            var wslEnvs = await CondaManager.ListEnvironmentsWSL();
+
+            //add the wsl envs to the richTextBox
+            rtbPythonBridge.Text += "WSL Conda Envs:" + Environment.NewLine;
+            rtbPythonBridge.Text += string.Join(Environment.NewLine, wslEnvs) + Environment.NewLine;
             rtbPythonBridge.Text += Environment.NewLine;
 
-            //check if a port is free
-            bool isFree = PortHelper.checkIfPortIsFree(freePort);
-            rtbPythonBridge.Text += $"Is Port {freePort} Free: " + isFree.ToString();
-            rtbPythonBridge.Text += Environment.NewLine + Environment.NewLine;
+            //get a specific wsl env. This env can then be used to run scripts, start services, etc.
+            var wslEnv = await CondaManager.GetEnvironmentWSL(SampleConfig.WSLCondaEnvName);
+            // add the wsl env details to the richTextBox
+            rtbPythonBridge.Text += wslEnv.Name + Environment.NewLine + wslEnv.Path + Environment.NewLine + wslEnv.WSL_Distro + Environment.NewLine;
         }
 
         private async void btnTestWSL_Helper_Click(object sender, EventArgs e)
@@ -251,15 +224,6 @@ namespace DotNetPythonBridge.SampleApp
                 {
                     rtbPythonBridge.Text += "No default WSL distro found. Cannot create environment in WSL." + Environment.NewLine;
                 }
-
-                //// set some options and get the default wsl distro using the options class
-                //DotNetPythonBridgeOptions options = new DotNetPythonBridgeOptions
-                //{
-                //    DefaultCondaPath = @"F:\Ash docs\BTBP\c#\Ash projects\DotNetPythonBridgeUI\miniconda3",
-                //    DefaultWSLCondaPath = "/home/ash/miniconda3",
-                //    DefaultWSLDistro = "Ubuntu"
-                //};
-                //WSL_Helper.WSL_Distro distro = await options.GetWSL_DistroAsync();
             }
         }
 
@@ -297,11 +261,8 @@ namespace DotNetPythonBridge.SampleApp
                 rtbPythonBridge.Text += pyResult.Error + Environment.NewLine;
                 rtbPythonBridge.Text += Environment.NewLine;
 
-                //inline python code for a simple math operation that returns a result
-                string inlineCode = "result = 0\nfor i in range(5):\n    result += i\nprint(f'Sum of first 5 numbers is: {result}')";
-
                 //run inline python code in windows using the env
-                pyResult = await PythonRunner.RunCode(inlineCode, env);
+                pyResult = await PythonRunner.RunCode(SampleConfig.TestInlineCode, env);
                 rtbPythonBridge.Text += "Running Inline Python Code in Windows:" + Environment.NewLine;
                 rtbPythonBridge.Text += pyResult.Output + Environment.NewLine;
                 rtbPythonBridge.Text += pyResult.Error + Environment.NewLine;
@@ -331,7 +292,7 @@ namespace DotNetPythonBridge.SampleApp
                 }
 
                 // get a specific env in wsl
-                WSL_Distros distros = await WSL_Helper.GetWSLDistros();
+                WSL_Helper.WSL_Distros distros = await WSL_Helper.GetWSLDistros();
                 var defaultDistro = distros.GetDefaultDistro();
 
                 if (defaultDistro != null)
@@ -368,8 +329,7 @@ namespace DotNetPythonBridge.SampleApp
                 if (defaultDistro != null)
                 {
                     var env = await CondaManager.GetEnvironmentWSL(SampleConfig.CondaEnvName, defaultDistro);
-                    string inlineCode = "result = 0\nfor i in range(5):\n    result += i\nprint(f'Sum of first 5 numbers is: {result}')";
-                    var pyResult = await PythonRunner.RunCodeWSL(inlineCode, env, defaultDistro);
+                    var pyResult = await PythonRunner.RunCodeWSL(SampleConfig.TestInlineCode, env, defaultDistro);
                     rtbPythonBridge.Text += "Running Inline Python Code in WSL:" + Environment.NewLine;
                     rtbPythonBridge.Text += pyResult.Output + Environment.NewLine;
                     rtbPythonBridge.Text += pyResult.Error + Environment.NewLine;
@@ -603,9 +563,7 @@ namespace DotNetPythonBridge.SampleApp
                 rtbPythonBridge.Text += Environment.NewLine;
 
                 //run inline python code in windows
-                //inline python code for a simple math operation that returns a result
-                string inlineCode = "result = 0\nfor i in range(5):\n    result += i\nprint(f'Sum of first 5 numbers is: {result}')";
-                pyResult = await PythonRunner.RunCode(code: inlineCode, cancellationToken: token, timeout: timeout);  // no env provided, will use lazy init by using the base conda env
+                pyResult = await PythonRunner.RunCode(code: SampleConfig.TestInlineCode, cancellationToken: token, timeout: timeout);  // no env provided, will use lazy init by using the base conda env
                 rtbPythonBridge.Text += "Running Inline Python Code in Windows:" + Environment.NewLine;
                 rtbPythonBridge.Text += pyResult.Output + Environment.NewLine;
                 rtbPythonBridge.Text += pyResult.Error + Environment.NewLine;
@@ -624,8 +582,7 @@ namespace DotNetPythonBridge.SampleApp
 
 
                 // run inline python code in wsl using the env
-                string inlineCode = "result = 0\nfor i in range(5):\n    result += i\nprint(f'Sum of first 5 numbers is: {result}')";
-                pyResult = await PythonRunner.RunCodeWSL(inlineCode, cancellationToken: token, timeout: timeout); // no env or distro provided, will use lazy init by using the base conda env in default wsl distro
+                pyResult = await PythonRunner.RunCodeWSL(SampleConfig.TestInlineCode, cancellationToken: token, timeout: timeout); // no env or distro provided, will use lazy init by using the base conda env in default wsl distro
                 rtbPythonBridge.Text += "Running Inline Python Code in WSL:" + Environment.NewLine;
                 rtbPythonBridge.Text += pyResult.Output + Environment.NewLine;
                 rtbPythonBridge.Text += pyResult.Error + Environment.NewLine;

@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
-    <PackageLicenseExpression>Polyform-Noncommercial-1.0.0</PackageLicenseExpression>
+    <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,6 +27,10 @@
     <None Update="TestService.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+
+    <None Include="..\LICENSE.md" Pack="true" PackagePath="" />
+    <None Include="..\COMMERCIAL_LICENSE.md" Pack="true" PackagePath="" />
+    <None Include="..\LICENSING_FAQ.md" Pack="true" PackagePath="" />
   </ItemGroup>
 
 </Project>

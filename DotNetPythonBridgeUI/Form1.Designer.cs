@@ -30,22 +30,25 @@
         {
             btnListEnvs = new Button();
             rtbPythonBridge = new RichTextBox();
-            btnTestPorts = new Button();
             btnTestWSL_Helper = new Button();
             btnTestConda = new Button();
             btnPythonRunner = new Button();
             checkBoxWSL = new CheckBox();
             groupBox1 = new GroupBox();
+            btnLazyInlineScriptRun = new Button();
             btnLazyServiceStartStop = new Button();
             btnLazyInit = new Button();
             buttonManual_Init = new Button();
-            btnLazyInlineScriptRun = new Button();
+            label1 = new Label();
+            label2 = new Label();
+            label3 = new Label();
+            label4 = new Label();
             groupBox1.SuspendLayout();
             SuspendLayout();
             // 
             // btnListEnvs
             // 
-            btnListEnvs.Location = new Point(243, 278);
+            btnListEnvs.Location = new Point(509, 283);
             btnListEnvs.Name = "btnListEnvs";
             btnListEnvs.Size = new Size(151, 89);
             btnListEnvs.TabIndex = 0;
@@ -55,25 +58,15 @@
             // 
             // rtbPythonBridge
             // 
-            rtbPythonBridge.Location = new Point(812, 12);
+            rtbPythonBridge.Location = new Point(700, 12);
             rtbPythonBridge.Name = "rtbPythonBridge";
-            rtbPythonBridge.Size = new Size(915, 1064);
+            rtbPythonBridge.Size = new Size(788, 674);
             rtbPythonBridge.TabIndex = 1;
             rtbPythonBridge.Text = "";
             // 
-            // btnTestPorts
-            // 
-            btnTestPorts.Location = new Point(70, 43);
-            btnTestPorts.Name = "btnTestPorts";
-            btnTestPorts.Size = new Size(151, 89);
-            btnTestPorts.TabIndex = 2;
-            btnTestPorts.Text = "Test Ports";
-            btnTestPorts.UseVisualStyleBackColor = true;
-            btnTestPorts.Click += btnTestPorts_Click;
-            // 
             // btnTestWSL_Helper
             // 
-            btnTestWSL_Helper.Location = new Point(70, 278);
+            btnTestWSL_Helper.Location = new Point(352, 283);
             btnTestWSL_Helper.Name = "btnTestWSL_Helper";
             btnTestWSL_Helper.Size = new Size(151, 89);
             btnTestWSL_Helper.TabIndex = 3;
@@ -83,7 +76,7 @@
             // 
             // btnTestConda
             // 
-            btnTestConda.Location = new Point(28, 112);
+            btnTestConda.Location = new Point(16, 79);
             btnTestConda.Name = "btnTestConda";
             btnTestConda.Size = new Size(151, 89);
             btnTestConda.TabIndex = 4;
@@ -93,7 +86,7 @@
             // 
             // btnPythonRunner
             // 
-            btnPythonRunner.Location = new Point(28, 207);
+            btnPythonRunner.Location = new Point(173, 79);
             btnPythonRunner.Name = "btnPythonRunner";
             btnPythonRunner.Size = new Size(151, 89);
             btnPythonRunner.TabIndex = 5;
@@ -104,39 +97,50 @@
             // checkBoxWSL
             // 
             checkBoxWSL.AutoSize = true;
-            checkBoxWSL.Location = new Point(28, 58);
+            checkBoxWSL.Location = new Point(16, 25);
             checkBoxWSL.Name = "checkBoxWSL";
-            checkBoxWSL.Size = new Size(73, 29);
+            checkBoxWSL.Size = new Size(128, 29);
             checkBoxWSL.TabIndex = 6;
-            checkBoxWSL.Text = "WSL";
+            checkBoxWSL.Text = "Run in WSL";
             checkBoxWSL.UseVisualStyleBackColor = true;
             // 
             // groupBox1
             // 
+            groupBox1.BackColor = SystemColors.ControlLight;
             groupBox1.Controls.Add(btnLazyInlineScriptRun);
             groupBox1.Controls.Add(btnLazyServiceStartStop);
             groupBox1.Controls.Add(btnPythonRunner);
             groupBox1.Controls.Add(checkBoxWSL);
             groupBox1.Controls.Add(btnTestConda);
-            groupBox1.Location = new Point(70, 436);
+            groupBox1.Location = new Point(22, 12);
             groupBox1.Name = "groupBox1";
-            groupBox1.Size = new Size(427, 508);
+            groupBox1.Size = new Size(658, 224);
             groupBox1.TabIndex = 7;
             groupBox1.TabStop = false;
             // 
+            // btnLazyInlineScriptRun
+            // 
+            btnLazyInlineScriptRun.Location = new Point(487, 79);
+            btnLazyInlineScriptRun.Name = "btnLazyInlineScriptRun";
+            btnLazyInlineScriptRun.Size = new Size(151, 89);
+            btnLazyInlineScriptRun.TabIndex = 8;
+            btnLazyInlineScriptRun.Text = "Inline/Script Run";
+            btnLazyInlineScriptRun.UseVisualStyleBackColor = true;
+            btnLazyInlineScriptRun.Click += btnLazyInlineScriptRun_Click;
+            // 
             // btnLazyServiceStartStop
             // 
-            btnLazyServiceStartStop.Location = new Point(28, 302);
+            btnLazyServiceStartStop.Location = new Point(330, 79);
             btnLazyServiceStartStop.Name = "btnLazyServiceStartStop";
             btnLazyServiceStartStop.Size = new Size(151, 89);
             btnLazyServiceStartStop.TabIndex = 7;
-            btnLazyServiceStartStop.Text = "Test Lazy Service Start/Stop";
+            btnLazyServiceStartStop.Text = "Service Start/Stop";
             btnLazyServiceStartStop.UseVisualStyleBackColor = true;
             btnLazyServiceStartStop.Click += btnLazyServiceStartStop_Click;
             // 
             // btnLazyInit
             // 
-            btnLazyInit.Location = new Point(70, 161);
+            btnLazyInit.Location = new Point(38, 283);
             btnLazyInit.Name = "btnLazyInit";
             btnLazyInit.Size = new Size(151, 89);
             btnLazyInit.TabIndex = 8;
@@ -146,7 +150,7 @@
             // 
             // buttonManual_Init
             // 
-            buttonManual_Init.Location = new Point(243, 161);
+            buttonManual_Init.Location = new Point(195, 283);
             buttonManual_Init.Name = "buttonManual_Init";
             buttonManual_Init.Size = new Size(151, 89);
             buttonManual_Init.TabIndex = 9;
@@ -154,40 +158,73 @@
             buttonManual_Init.UseVisualStyleBackColor = true;
             buttonManual_Init.Click += buttonManual_Init_Click;
             // 
-            // btnLazyInlineScriptRun
+            // label1
             // 
-            btnLazyInlineScriptRun.Location = new Point(28, 397);
-            btnLazyInlineScriptRun.Name = "btnLazyInlineScriptRun";
-            btnLazyInlineScriptRun.Size = new Size(151, 89);
-            btnLazyInlineScriptRun.TabIndex = 8;
-            btnLazyInlineScriptRun.Text = "Test Lazy Inline/Script Run";
-            btnLazyInlineScriptRun.UseVisualStyleBackColor = true;
-            btnLazyInlineScriptRun.Click += btnLazyInlineScriptRun_Click;
+            label1.AutoSize = true;
+            label1.Font = new Font("Segoe UI", 10F);
+            label1.Location = new Point(22, 446);
+            label1.Name = "label1";
+            label1.Size = new Size(124, 28);
+            label1.TabIndex = 10;
+            label1.Text = "Before using:";
+            // 
+            // label2
+            // 
+            label2.AutoSize = true;
+            label2.Font = new Font("Segoe UI", 10F);
+            label2.Location = new Point(22, 507);
+            label2.Name = "label2";
+            label2.Size = new Size(654, 28);
+            label2.TabIndex = 11;
+            label2.Text = "1. Copy the files TestService.py, TestScript.py, and testCondaEnvCreate.yml";
+            // 
+            // label3
+            // 
+            label3.AutoSize = true;
+            label3.Font = new Font("Segoe UI", 10F);
+            label3.Location = new Point(41, 547);
+            label3.Name = "label3";
+            label3.Size = new Size(333, 28);
+            label3.TabIndex = 12;
+            label3.Text = "to a suitable location on your system";
+            // 
+            // label4
+            // 
+            label4.AutoSize = true;
+            label4.Font = new Font("Segoe UI", 10F);
+            label4.Location = new Point(22, 606);
+            label4.Name = "label4";
+            label4.Size = new Size(529, 28);
+            label4.TabIndex = 13;
+            label4.Text = "2. Update the values in SampleConfig for your environment";
             // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(10F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1735, 1085);
+            ClientSize = new Size(1505, 703);
+            Controls.Add(label4);
+            Controls.Add(label3);
+            Controls.Add(label2);
+            Controls.Add(label1);
             Controls.Add(buttonManual_Init);
             Controls.Add(btnLazyInit);
             Controls.Add(btnTestWSL_Helper);
             Controls.Add(groupBox1);
-            Controls.Add(btnTestPorts);
             Controls.Add(rtbPythonBridge);
             Controls.Add(btnListEnvs);
             Name = "Form1";
-            Text = "Form1";
+            Text = "DotNetPythonBridge Sample App";
             groupBox1.ResumeLayout(false);
             groupBox1.PerformLayout();
             ResumeLayout(false);
+            PerformLayout();
         }
 
         #endregion
 
         private Button btnListEnvs;
         private RichTextBox rtbPythonBridge;
-        private Button btnTestPorts;
         private Button btnTestWSL_Helper;
         private Button btnTestConda;
         private Button btnPythonRunner;
@@ -197,5 +234,9 @@
         private Button buttonManual_Init;
         private Button btnLazyServiceStartStop;
         private Button btnLazyInlineScriptRun;
+        private Label label1;
+        private Label label2;
+        private Label label3;
+        private Label label4;
     }
 }
