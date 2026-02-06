@@ -45,4 +45,4 @@ For commercial use, a separate commercial license is required. Visit the project
 
 ## Contact
 For questions or issues, please open an issue on GitHub or contact us at:
-👉> **dotnetpythonbridge@gmail.com**
+👉 **dotnetpythonbridge@gmail.com**
