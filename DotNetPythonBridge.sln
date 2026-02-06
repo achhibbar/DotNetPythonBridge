@@ -7,8 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetPythonBridge", "DotNe
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetPythonBridge.Tests", "DotNetPythonBridge.Tests\DotNetPythonBridge.Tests.csproj", "{DF7E7301-C6FA-4D24-84E9-65D4902782DC}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetPythonBridge.SampleApp", "DotNetPythonBridgeUI\DotNetPythonBridge.SampleApp.csproj", "{0B765470-068C-4AB7-9E9B-3345DFB4A8FB}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B0114892-5DF6-4530-BBDA-23458A2CB380}"
 	ProjectSection(SolutionItems) = preProject
 		COMMERCIAL_LICENSE.md = COMMERCIAL_LICENSE.md
@@ -16,6 +14,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		LICENSING_FAQ.md = LICENSING_FAQ.md
 		README.md = README.md
 	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetPythonBridge.SampleApp", "DotNetPythonBridge.SampleApp\DotNetPythonBridge.SampleApp.csproj", "{DAFC03A7-A99D-4989-8A0B-4BBD473ED23F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -51,18 +51,18 @@ Global
 		{DF7E7301-C6FA-4D24-84E9-65D4902782DC}.Release|x64.Build.0 = Release|Any CPU
 		{DF7E7301-C6FA-4D24-84E9-65D4902782DC}.Release|x86.ActiveCfg = Release|Any CPU
 		{DF7E7301-C6FA-4D24-84E9-65D4902782DC}.Release|x86.Build.0 = Release|Any CPU
-		{0B765470-068C-4AB7-9E9B-3345DFB4A8FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0B765470-068C-4AB7-9E9B-3345DFB4A8FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0B765470-068C-4AB7-9E9B-3345DFB4A8FB}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{0B765470-068C-4AB7-9E9B-3345DFB4A8FB}.Debug|x64.Build.0 = Debug|Any CPU
-		{0B765470-068C-4AB7-9E9B-3345DFB4A8FB}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{0B765470-068C-4AB7-9E9B-3345DFB4A8FB}.Debug|x86.Build.0 = Debug|Any CPU
-		{0B765470-068C-4AB7-9E9B-3345DFB4A8FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0B765470-068C-4AB7-9E9B-3345DFB4A8FB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0B765470-068C-4AB7-9E9B-3345DFB4A8FB}.Release|x64.ActiveCfg = Release|Any CPU
-		{0B765470-068C-4AB7-9E9B-3345DFB4A8FB}.Release|x64.Build.0 = Release|Any CPU
-		{0B765470-068C-4AB7-9E9B-3345DFB4A8FB}.Release|x86.ActiveCfg = Release|Any CPU
-		{0B765470-068C-4AB7-9E9B-3345DFB4A8FB}.Release|x86.Build.0 = Release|Any CPU
+		{DAFC03A7-A99D-4989-8A0B-4BBD473ED23F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DAFC03A7-A99D-4989-8A0B-4BBD473ED23F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DAFC03A7-A99D-4989-8A0B-4BBD473ED23F}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{DAFC03A7-A99D-4989-8A0B-4BBD473ED23F}.Debug|x64.Build.0 = Debug|Any CPU
+		{DAFC03A7-A99D-4989-8A0B-4BBD473ED23F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{DAFC03A7-A99D-4989-8A0B-4BBD473ED23F}.Debug|x86.Build.0 = Debug|Any CPU
+		{DAFC03A7-A99D-4989-8A0B-4BBD473ED23F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DAFC03A7-A99D-4989-8A0B-4BBD473ED23F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DAFC03A7-A99D-4989-8A0B-4BBD473ED23F}.Release|x64.ActiveCfg = Release|Any CPU
+		{DAFC03A7-A99D-4989-8A0B-4BBD473ED23F}.Release|x64.Build.0 = Release|Any CPU
+		{DAFC03A7-A99D-4989-8A0B-4BBD473ED23F}.Release|x86.ActiveCfg = Release|Any CPU
+		{DAFC03A7-A99D-4989-8A0B-4BBD473ED23F}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
