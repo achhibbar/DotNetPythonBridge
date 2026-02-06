@@ -4,7 +4,7 @@
     <PackageId>DotNetPythonBridge</PackageId>
     <Version>1.0.0-beta.1</Version>
     <Authors>Ashutosh Chhibbar</Authors>
-    <Description>DotNetPythonBridge is a .NET runtime layer for executing and managing Python processes, environments, and services across Windows and WSL.</Description>
+    <Description>DotNetPythonBridge is a .NET runtime layer designed to make it easy and reliable to launch/monitor long-running Python services, run Python processes and manage Conda/Mamba environments (including WSL) — without brittle shell scripts or manual setup.</Description>
     <PackageTags>python;conda;wsl;dotnet;process</PackageTags>
     <PackageProjectUrl>https://github.com/achhibbar/DotNetPythonBridge</PackageProjectUrl>
     
