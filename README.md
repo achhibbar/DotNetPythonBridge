@@ -265,7 +265,7 @@ If you wish to use this software for **commercial purposes**, you must obtain a
 **commercial license**.
 
 Commercial licenses are available here:
-> 🔗 **[Link coming soon — Lemon Squeezy]**
+> 🔗 **https://dotnetpythonbridge.lemonsqueezy.com/**
 
 Until the commercial license page is live, please contact:
 > **dotnetpythonbridge@gmail.com**

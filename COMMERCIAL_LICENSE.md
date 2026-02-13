@@ -1,20 +1,66 @@
-﻿# Commercial License
+﻿# DotNetPythonBridge — Commercial License
 
-Commercial use of this software requires a paid license.
+DotNetPythonBridge is available under a dual-licensing model:
 
-This includes, but is not limited to:
-- Use within a company or organization
-- Use in paid or revenue-generating products or services
-- SaaS, hosted services, or internal tools
-- Consulting or client work involving this software
+- Free for non-commercial use under the Polyform Noncommercial License
+- Commercial use requires a paid commercial license
 
-A commercial license grants:
-- The right to use the software for commercial purposes
-- The right to distribute the software as part of a commercial product
-- Priority support (if offered)
+---
 
-Commercial licenses will be available via:
-> 🔗 Lemon Squeezy (coming soon)
+## When Do You Need a Commercial License?
 
-Until then, please contact:
-> dotnetpythonbridge@gmail.com
+You need a commercial license if you use DotNetPythonBridge in:
+
+- A for-profit company or organization
+- Internal business tools
+- Paid products or services
+- SaaS or hosted applications
+- Consulting, contracting, or client work
+- Any revenue-generating activity
+
+If you are unsure whether your use is commercial, assume that it is.
+
+---
+
+## What Does a Commercial License Include?
+
+A valid commercial license grants:
+
+- The right to use DotNetPythonBridge for commercial purposes
+- The right to integrate it into internal and client-facing systems
+- The right to distribute applications that include the library
+- Access to official license documentation
+- A license key for proof of purchase
+
+Unless otherwise stated, commercial licenses are perpetual.
+
+---
+
+## Available Licenses
+
+### Single Developer License
+- Valid for one (1) developer
+- For freelancers and individual contributors
+
+### Organization License (Up to 5 Developers)
+- Valid for up to five (5) developers
+- For small teams and companies
+
+---
+
+## How to Purchase
+
+Commercial licenses are available via Lemon Squeezy:
+
+🔗 https://dotnetpythonbridge.lemonsqueezy.com
+
+---
+
+## Support
+
+Commercial licenses do not include guaranteed support by default.
+
+Best-effort support may be provided via email.
+📧 dotnetpythonbridge@gmail.com
+
+Optional support plans may be offered in the future.
