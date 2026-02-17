@@ -21,6 +21,7 @@ namespace DotNetPythonBridge
         public TimeSpan WSLWarmupRetryDelay { get; set; } = TimeSpan.FromSeconds(1);
         public int WSLWarmupRetries { get; set; } = 3;
         public int WSLGetCondaPathRetries { get; set; } = 3;
+        public bool WSLEnabled { get; set; } = true; // whether to enable WSL support at all. If false, will not attempt to use WSL even if DefaultWSLDistro is set.    
 
         // Fluent helpers
         /// <summary>
@@ -114,6 +115,11 @@ namespace DotNetPythonBridge
         /// <param name="retries">The number of retries.</param>
         /// <returns>The current instance of <see cref="DotNetPythonBridgeOptions"/>.</returns>
         public DotNetPythonBridgeOptions WithWSLGetCondaPathRetries(int retries) { WSLGetCondaPathRetries = retries; return this; }
+        /// <summary>
+        /// Sets whether to enable WSL support. If disabled, the bridge will not attempt to use WSL even if a default WSL distribution is specified.
+        /// </summary>
+        /// <param name="enabled">True to enable WSL support; otherwise, false.</param>
+        public DotNetPythonBridgeOptions EnableWSL(bool enabled = true) { WSLEnabled = enabled; return this; }
 
         // return a WSL_Helper.WSL_Distro object if DefaultWSLDistro is set
         public async Task<Utils.WSL_Helper.WSL_Distro?> GetWSL_DistroAsync()
