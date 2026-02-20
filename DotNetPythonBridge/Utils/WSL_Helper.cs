@@ -71,6 +71,11 @@ namespace DotNetPythonBridge.Utils
                     SetDistros(distros); // thread-safe set cached distros
                     return distros;
                 }
+                else // if the command failed or returned no output, WSL is likely not installed or accessible, return an empty list and log the error
+                {
+                    Log.Logger.LogError("Failed to retrieve WSL distributions. Ensure WSL is installed and accessible. " + result.Error);
+                    return new WSL_Distros(); // return empty list
+                }
             }
             catch (PlatformNotSupportedException ex)
             {

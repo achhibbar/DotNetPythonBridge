@@ -426,9 +426,10 @@ namespace DotNetPythonBridge.SampleApp
         {
             // set some options and get the default wsl distro using the options class using fluent syntax
             DotNetPythonBridgeOptions dotNetPythonBridgeOptions = new DotNetPythonBridgeOptions()
-                .WithCondaPath(SampleConfig.DefaultCondaPath)
-                .WithWSLDistro(SampleConfig.DefaultWSLDistro)
-                .WithWSLCondaPath(SampleConfig.DefaultWSLCondaPath); // windows path to wsl conda
+                //.WithCondaPath(SampleConfig.DefaultCondaPath)
+                //.WithWSLDistro(SampleConfig.DefaultWSLDistro)
+                //.WithWSLCondaPath(SampleConfig.DefaultWSLCondaPath) // windows path to wsl conda
+                .WithEnableWSL(SampleConfig.DefaultUseWSL); // enable or disable wsl based on config, overr WSLDistro and WSLCondaPath if WSL is disabled
 
             await CondaManager.Initialize(dotNetPythonBridgeOptions, reinitialize: true);
 
@@ -444,9 +445,17 @@ namespace DotNetPythonBridge.SampleApp
                 rtbPythonBridge.Text += env + Environment.NewLine;
             }
             rtbPythonBridge.Text += Environment.NewLine;
-            rtbPythonBridge.Text += "WSL Distro: " + CondaManager.WSL.Name + Environment.NewLine + Environment.NewLine;
-            rtbPythonBridge.Text += "WSL Conda/Mamba Path: " + CondaManager.WSL_CondaPath + Environment.NewLine;
-            rtbPythonBridge.Text += "Conda/Mamba Environments in WSL:" + Environment.NewLine;
+            if (CondaManager.WSL != null)
+            {
+                rtbPythonBridge.Text += "WSL Distro: " + CondaManager.WSL.Name + Environment.NewLine + Environment.NewLine;
+                rtbPythonBridge.Text += "WSL Conda/Mamba Path: " + CondaManager.WSL_CondaPath + Environment.NewLine;
+                rtbPythonBridge.Text += "Conda/Mamba Environments in WSL:" + Environment.NewLine;
+            }
+            else
+            {
+                rtbPythonBridge.Text += "WSL is disabled/not installed. Skipping WSL environment listing." + Environment.NewLine;
+                return;
+            }
             if (CondaManager.PythonEnvironmentsWSL == null)
             {
                 rtbPythonBridge.Text += "No Conda Environments found in WSL." + Environment.NewLine;

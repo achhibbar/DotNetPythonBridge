@@ -119,7 +119,7 @@ namespace DotNetPythonBridge
         /// Sets whether to enable WSL support. If disabled, the bridge will not attempt to use WSL even if a default WSL distribution is specified.
         /// </summary>
         /// <param name="enabled">True to enable WSL support; otherwise, false.</param>
-        public DotNetPythonBridgeOptions EnableWSL(bool enabled = true) { WSLEnabled = enabled; return this; }
+        public DotNetPythonBridgeOptions WithEnableWSL(bool enabled = true) { WSLEnabled = enabled; return this; }
 
         // return a WSL_Helper.WSL_Distro object if DefaultWSLDistro is set
         public async Task<Utils.WSL_Helper.WSL_Distro?> GetWSL_DistroAsync()

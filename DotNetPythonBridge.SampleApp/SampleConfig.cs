@@ -44,5 +44,7 @@
         // Can either be the Linux path e.g., "/home/username/miniconda3/bin/conda"
         // or the Windows path to the WSL filesystem e.g., @"\\wsl$\Ubuntu\home\username\miniconda3\bin\conda.exe"
         public static string DefaultWSLCondaPath = @"/home/username/miniconda3/bin/conda";
+
+        public static bool DefaultUseWSL = false; // Whether to use WSL by default for testing
     }
 }

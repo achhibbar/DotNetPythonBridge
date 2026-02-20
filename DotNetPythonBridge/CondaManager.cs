@@ -172,36 +172,39 @@ namespace DotNetPythonBridge
 
                 var cpath = await GetCondaOrMambaPath();
                 updateCondaPath(cpath); // set the conda path with a lock
-                
                 // get all the conda/mamba envs, if reinitialize is true, force refresh
                 await ListEnvironments(refresh: reinitialize);
-                var dstrs = await WSL_Helper.GetWSLDistros(refresh: reinitialize); // ensure WSL is available
-                var wsldname = dstrs.GetDefaultDistro()?.Name; // get the default WSL distro if available
-                updateWSLDistroName(wsldname); // set the wsl distro name with a lock
 
-                if (!string.IsNullOrEmpty(_WSL_distroName))
+                if (_options.WSLEnabled) // if WSL is enabled in options, attempt to auto-detect WSL distro and conda/mamba path in WSL
                 {
-                    try
+                    var dstrs = await WSL_Helper.GetWSLDistros(refresh: reinitialize); // ensure WSL is available, returning empty list if not, and get the default WSL distro if available
+                    var wsldname = dstrs.GetDefaultDistro()?.Name; // get the default WSL distro if available
+                    updateWSLDistroName(wsldname); // set the wsl distro name with a lock
+
+                    if (!string.IsNullOrEmpty(_WSL_distroName))
                     {
-                        var wslcpath = await GetCondaOrMambaPathWSL(new WSL_Helper.WSL_Distro(_WSL_distroName, false));
-                        updateWSLCondaPath(wslcpath); // set the wsl conda path with a lock
-                        // get all the conda/mamba envs in WSL, if reinitialize is true, force refresh
-                        await ListEnvironmentsWSL(WSL, refresh: reinitialize);
+                        try
+                        {
+                            var wslcpath = await GetCondaOrMambaPathWSL(new WSL_Helper.WSL_Distro(_WSL_distroName, false));
+                            updateWSLCondaPath(wslcpath); // set the wsl conda path with a lock
+                                                          // get all the conda/mamba envs in WSL, if reinitialize is true, force refresh
+                            await ListEnvironmentsWSL(WSL, refresh: reinitialize);
+                        }
+                        catch (FileNotFoundException ex)
+                        {
+                            Log.Logger.LogWarning($"Failed to auto-detect conda/mamba in WSL Distro {_WSL_distroName}: {ex.Message}");
+                            updateWSLCondaPath(null);
+                        }
+                        catch (InvalidOperationException ex)
+                        {
+                            Log.Logger.LogWarning($"Failed to auto-detect conda/mamba in WSL Distro {_WSL_distroName}: {ex.Message}");
+                            updateWSLCondaPath(null);
+                        }
                     }
-                    catch (FileNotFoundException ex)
+                    else // if no default WSL distro found, log and skip WSL conda/mamba auto-detection
                     {
-                        Log.Logger.LogWarning($"Failed to auto-detect conda/mamba in WSL Distro {_WSL_distroName}: {ex.Message}");
-                        updateWSLCondaPath(null);
+                        Log.Logger.LogInformation("No default WSL distro found, skipping WSL conda/mamba auto-detection.");
                     }
-                    catch (InvalidOperationException ex)
-                    {
-                        Log.Logger.LogWarning($"Failed to auto-detect conda/mamba in WSL Distro {_WSL_distroName}: {ex.Message}");
-                        updateWSLCondaPath(null);
-                    }
-                }
-                else
-                {
-                    Log.Logger.LogInformation("No default WSL distro found, skipping WSL conda/mamba auto-detection.");
                 }
 
                 updateIsInitialized(true); // set the isInitialized flag with a lock
